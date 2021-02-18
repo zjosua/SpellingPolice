@@ -1,16 +1,11 @@
 # -*- coding: utf-8 -*-
-# Copyright: (C) 2019-2020 Lovac42
+# Copyright: (C) 2019-2021 Lovac42
 # Support: https://github.com/lovac42/SpellingPolice
 # License: GNU GPL, version 3 or later; http://www.gnu.org/copyleft/gpl.html
 
 
 # TODO:
 #   Auto download dicts from github
-
-# Good news everyone!
-# Dicts config has been moved to GUI manager
-#    Tools > Dictionary Configuration
-# No need to restart or edit anything now.
 
 
 from aqt.qt import *
