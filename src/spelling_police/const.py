@@ -4,11 +4,12 @@
 # License: GNU GPL, version 3 or later; http://www.gnu.org/copyleft/gpl.html
 
 
-import re, os
-from aqt import mw
-from aqt.qt import qtminor
+import os
+import re
 from pathlib import Path
 
+from aqt import mw
+from aqt.qt import qtmajor, qtminor
 
 ADDON_PATH = os.path.dirname(__file__)
 
@@ -16,16 +17,17 @@ ADDON_NAME = "SpellingPolice"
 
 TARGET_STABLE_VERSION = 23
 
-ALT_BUILD_VERSION = qtminor < 10 #true up to 2.1.19?
+ALT_BUILD_VERSION = qtmajor == 5 and qtminor < 10  # true up to 2.1.19?
 
-RE_DICT_EXT_ENABLED = re.compile(r'\.bdic$', re.I)
+RE_DICT_EXT_ENABLED = re.compile(r"\.bdic$", re.I)
 
-RE_DICT_EXT_DISABLED = re.compile(r'\.bdic\.disabled$', re.I)
+RE_DICT_EXT_DISABLED = re.compile(r"\.bdic\.disabled$", re.I)
 
 if not ALT_BUILD_VERSION:
     DICT_DIR = os.path.join(mw.pm.base, "dictionaries")
 else:
     from aqt import moduleDir
+
     # Wins only, prob won't work on mac or linux w/o permission
     DICT_DIR = os.path.join(moduleDir, "qtwebengine_dictionaries")
 os.environ["QTWEBENGINE_DICTIONARIES_PATH"] = DICT_DIR

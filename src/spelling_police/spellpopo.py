@@ -18,7 +18,7 @@ from functools import partial
 from .dict import DictionaryManager
 from .config import Config
 
-ADDON_NAME='SpellingPolice'
+ADDON_NAME = "SpellingPolice"
 conf = Config(ADDON_NAME)
 
 dictMan = DictionaryManager()
@@ -27,8 +27,9 @@ dictMan = DictionaryManager()
 def replaceMisspelledWord(page, sug_word):
     page.replaceMisspelledWord(sug_word)
 
+
 def onContextMenuEvent(web, menu):
-    p=web._page.profile()
+    p = web._page.profile()
 
     # For Edit field during review
     if mw.state == "review":
@@ -36,34 +37,44 @@ def onContextMenuEvent(web, menu):
             return
         p.setSpellCheckLanguages(dictMan.getDictionaries())
 
-    b=p.isSpellCheckEnabled()
+    b = p.isSpellCheckEnabled()
     menu.addSeparator()
-    a=menu.addAction(_("Spelling Police"))
+    a = menu.addAction(_("Spelling Police"))
     a.setCheckable(True)
     a.setChecked(b)
-    a.triggered.connect(lambda:p.setSpellCheckEnabled(not b))
+    a.triggered.connect(lambda: p.setSpellCheckEnabled(not b))
 
     if b and conf.get("duck_mode", False):
-        firstAct=menu.actions()[0]
-        data=web._page.contextMenuData()
+        firstAct = menu.actions()[0]
+        data = _contextMenuRequest(web)
         for sug_word in data.spellCheckerSuggestions():
-            a=menu.addAction(sug_word)
+            a = menu.addAction(sug_word)
             menu.insertAction(firstAct, a)
             a.triggered.connect(partial(replaceMisspelledWord, web._page, sug_word))
             if conf.get("bold_text", True):
-                f=a.font()
+                f = a.font()
                 f.setBold(True)
                 a.setFont(f)
         menu.insertSeparator(firstAct)
+
+
+def _contextMenuRequest(web):
+    if qtmajor == 5:
+        return web.page().contextMenuData()
+    elif qtmajor == 6:
+        return web.lastContextMenuRequest()
+    else:
+        raise RuntimeError("unkown qt version")
+
 
 addHook("EditorWebView.contextMenuEvent", onContextMenuEvent)
 addHook("AnkiWebView.contextMenuEvent", onContextMenuEvent)
 
 
 def setupBDIC(web, *args, **kwargs):
-    p=web._page.profile()
+    p = web._page.profile()
     p.setSpellCheckEnabled(conf.get("auto_startup", False))
     p.setSpellCheckLanguages(dictMan.getDictionaries())
 
-AnkiWebView.__init__=wrap(AnkiWebView.__init__, setupBDIC, "after")
 
+AnkiWebView.__init__ = wrap(AnkiWebView.__init__, setupBDIC, "after")

@@ -5,6 +5,7 @@
 
 
 import os
+
 from aqt import mw
 from aqt.qt import *
 from aqt.utils import openFolder, showInfo
@@ -26,8 +27,8 @@ class DictionaryManager:
         mw.form.menuTools.addAction(a)
 
     def showConfig(self):
-        p=mw.web._page.profile()
-        b=p.isSpellCheckEnabled()
+        p = mw.web._page.profile()
+        b = p.isSpellCheckEnabled()
         p.setSpellCheckEnabled(False)
         p.setSpellCheckLanguages({})
         d = DictionaryDialog()
@@ -37,8 +38,6 @@ class DictionaryManager:
 
     def getDictionaries(self):
         return self._dicts
-
-
 
 
 class DictionaryDialog(QDialog):
@@ -59,15 +58,14 @@ class DictionaryDialog(QDialog):
         layout = QVBoxLayout()
         self.list = QListWidget()
         self.list.setAlternatingRowColors(True)
-        self.list.setSelectionMode(
-            QAbstractItemView.ExtendedSelection)
+        self.list.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.list.itemDoubleClicked.connect(self._toggle)
 
-        bws_btn = QPushButton('Browse')
+        bws_btn = QPushButton("Browse")
         bws_btn.clicked.connect(self._browse)
-        en_btn = QPushButton('Enable')
+        en_btn = QPushButton("Enable")
         en_btn.clicked.connect(self._enable)
-        dis_btn = QPushButton('Disable')
+        dis_btn = QPushButton("Disable")
         dis_btn.clicked.connect(self._disable)
 
         control_box = QHBoxLayout()
@@ -84,7 +82,7 @@ class DictionaryDialog(QDialog):
         self.list.clear()
 
         try:
-            DICT_FILES=os.listdir(DICT_DIR)
+            DICT_FILES = os.listdir(DICT_DIR)
         except FileNotFoundError:
             showInfo("Missing or no read/write permission to dictionary folder.")
             return
@@ -107,35 +105,34 @@ class DictionaryDialog(QDialog):
             openFolder(DICT_DIR)
         elif ALT_BUILD_VERSION:
             from aqt import moduleDir
+
             openFolder(moduleDir)
 
         if ALT_BUILD_VERSION:
             showInfo(ALT_BUILD_INSTRUCTIONS, title="Instructions", textFormat="rich")
 
     def _enable(self):
-        sel = [i for i in range(self.list.count())
-                if self.list.item(i).isSelected()]
+        sel = [i for i in range(self.list.count()) if self.list.item(i).isSelected()]
         if sel:
             for i in sel:
-                fn=self.list.item(i).text()
+                fn = self.list.item(i).text()
                 if RE_DICT_EXT_DISABLED.search(fn):
-                    f=os.path.join(DICT_DIR, fn)
+                    f = os.path.join(DICT_DIR, fn)
                     os.rename(f, f[:-9])
         self._update()
 
     def _disable(self):
-        sel = [i for i in range(self.list.count())
-                if self.list.item(i).isSelected()]
+        sel = [i for i in range(self.list.count()) if self.list.item(i).isSelected()]
         if sel:
             for i in sel:
-                fn=self.list.item(i).text()
+                fn = self.list.item(i).text()
                 if RE_DICT_EXT_ENABLED.search(fn):
-                    f=os.path.join(DICT_DIR, fn)
-                    os.rename(f, f+'.disabled')
+                    f = os.path.join(DICT_DIR, fn)
+                    os.rename(f, f + ".disabled")
         self._update()
 
     def _toggle(self):
-        fn=self.list.currentItem().text()
+        fn = self.list.currentItem().text()
         if RE_DICT_EXT_ENABLED.search(fn):
             self._disable()
         else:
