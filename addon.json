@@ -1,0 +1,14 @@
+{
+    "display_name": "Spelling Police",
+    "module_name": "spelling_police",
+    "repo_name": "SpellingPolice",
+    "ankiweb_id": "1410276506",
+    "author": "",
+    "conflicts": [],
+    "targets": [
+        "anki21"
+    ],
+    "min_anki_version": "2.1.5",
+    "max_tested_anki_version": "2.1.51",
+    "ankiweb_conflicts_with_local": false
+}
