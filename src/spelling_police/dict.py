@@ -27,14 +27,14 @@ class DictionaryManager:
         mw.form.menuTools.addAction(a)
 
     def showConfig(self):
-        p = mw.web._page.profile()
-        b = p.isSpellCheckEnabled()
-        p.setSpellCheckEnabled(False)
-        p.setSpellCheckLanguages({})
-        d = DictionaryDialog()
-        self._dicts = d.getDictionaries()
-        p.setSpellCheckEnabled(b)
-        p.setSpellCheckLanguages(self._dicts)
+        profile = mw.web._page.profile()
+
+        profile.setSpellCheckEnabled(False)
+        profile.setSpellCheckLanguages({})
+        self._dicts = DictionaryDialog().getDictionaries()
+
+        profile.setSpellCheckEnabled(profile.isSpellCheckEnabled())
+        profile.setSpellCheckLanguages(self._dicts)
 
     def getDictionaries(self):
         return self._dicts
