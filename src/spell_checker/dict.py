@@ -45,20 +45,20 @@ class DictionaryDialog(QDialog):
         QDialog.__init__(self)
         self._setupDialog()
         self._update()
-        self.exec_()
+        self.exec()
 
     def getDictionaries(self):
         return self._dict
 
     def _setupDialog(self):
         self.setWindowTitle("Dictionaries")
-        self.setWindowModality(Qt.WindowModal)
+        self.setWindowModality(Qt.WindowModality.WindowModal)
         self.resize(250, 250)
 
         layout = QVBoxLayout()
         self.list = QListWidget()
         self.list.setAlternatingRowColors(True)
-        self.list.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.list.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self.list.itemDoubleClicked.connect(self._toggle)
 
         bws_btn = QPushButton("Browse")
@@ -90,14 +90,14 @@ class DictionaryDialog(QDialog):
         for d in DICT_FILES:
             if RE_DICT_EXT_ENABLED.search(d):
                 item = QListWidgetItem(d)
-                item.setData(Qt.UserRole, d)
+                item.setData(Qt.ItemDataRole.UserRole, d)
                 self.list.addItem(item)
                 self._dict.append(d[:-5])
 
         for d in DICT_FILES:
             if RE_DICT_EXT_DISABLED.search(d):
                 item = QListWidgetItem(d)
-                item.setData(Qt.UserRole, d)
+                item.setData(Qt.ItemDataRole.UserRole, d)
                 self.list.addItem(item)
 
     def _browse(self):
