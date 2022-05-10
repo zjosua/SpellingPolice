@@ -1,4 +1,4 @@
-#Spelling Police
+# Spell Checker
 
 ## auto_startup
 Spelling popo is turned on by default?

@@ -18,7 +18,7 @@ from functools import partial
 from .dict import DictionaryManager
 from .config import Config
 
-ADDON_NAME = "SpellingPolice"
+ADDON_NAME = "Spell Checker"
 conf = Config(ADDON_NAME)
 
 dictMan = DictionaryManager()
@@ -39,7 +39,7 @@ def onContextMenuEvent(web: AnkiWebView, menu):
 
     spellCheckEnabled = profile.isSpellCheckEnabled()
     menu.addSeparator()
-    action = menu.addAction(_("Spelling Police"))
+    action = menu.addAction(_("Spell Checker"))
     action.setCheckable(True)
     action.setChecked(spellCheckEnabled)
     action.triggered.connect(

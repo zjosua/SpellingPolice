@@ -48,11 +48,11 @@ class Config:
             # self.config=mw.addonManager.getConfig(__name__)
         # else:
         self.config = self._readConfig()
-        runHook(self.addonName + ".configLoaded")
+        runHook(self.addonName + ".configLoaded")  # don't know what this is here for?
 
     def _updateConfig(self, config):
         self.config = nestedUpdate(self.config, config)
-        runHook(self.addonName + ".configUpdated")
+        runHook(self.addonName + ".configUpdated")  # don't know what this is here for?
 
     def _readConfig(self):
         conf = self.readFile("config.json")
@@ -74,10 +74,10 @@ class Config:
 
 # From: https://stackoverflow.com/questions/3232943/
 def nestedUpdate(d, u):
-    if ANKI21: #py3.3+
-        itms=u.items()
-    else: #py2.7
-        itms=u.iteritems()
+    if ANKI21:  # py3.3+
+        itms = u.items()
+    else:  # py2.7
+        itms = u.iteritems()
     for k, v in itms:
         if isinstance(v, Mapping):
             d[k] = nestedUpdate(d.get(k, {}), v)

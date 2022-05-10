@@ -1,7 +1,7 @@
 {
-    "display_name": "Spelling Police",
-    "module_name": "spelling_police",
-    "repo_name": "SpellingPolice",
+    "display_name": "Spell Checker",
+    "module_name": "spell_checker",
+    "repo_name": "spell-checker-addon",
     "ankiweb_id": "1410276506",
     "author": "",
     "conflicts": [],
