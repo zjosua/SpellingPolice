@@ -21,7 +21,7 @@ def add_custom_word(word: str) -> None:
     Add word to custom dictionaries. Overwrite if such dictionary already exists.
     The word must not contain a whitespace.
     """
-    word = unicodedata.normalize(word, "NFD")
+    word = unicodedata.normalize("NFD", word)
     if " " in word:
         raise Exception("Whitespace cannot be in the word.")
     file_name = urllib.parse.quote(word, safe="")
@@ -32,10 +32,24 @@ def add_custom_word(word: str) -> None:
         f.write(bdic_content)
 
 
+def remove_custom_word(word: str) -> bool:
+    """Returns false if the word was not removed"""
+    word = unicodedata.normalize("NFD", word)
+    file_name = urllib.parse.quote(word, safe="")
+    dict_path = CUSTOM_DICT_DIR_PATH / f"{file_name}.bdic"
+    if dict_path.exists() and dict_path.is_file():
+        dict_path.unlink()
+        return True
+    return False
+
+
 def custom_words() -> List[str]:
-    words = []
+    return [urllib.parse.unquote(path.stem) for path in custom_dict_files()]
+
+
+def custom_dict_files() -> List[Path]:
+    paths = []
     for child in CUSTOM_DICT_DIR_PATH.iterdir():
         if child.is_file() and child.suffix == ".bdic":
-            word = urllib.parse.unquote(child.stem)
-            words.append(word)
-    return words
+            paths.append(child)
+    return paths
