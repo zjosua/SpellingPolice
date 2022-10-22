@@ -12,7 +12,7 @@ https://chromium.googlesource.com/chromium/src/+/refs/heads/main/chrome/tools/co
 """
 import hashlib
 
-
+# TODO: remove TRY cmd as it's not needed when there's only one word
 def aff_bytes() -> bytes:
     """
 SET UTF-8
@@ -61,7 +61,9 @@ def aff_and_word(word: str) -> bytes:
 
     return output
 
-def bdic(word: str) -> bytes:
+
+def create_bdic(word: str) -> bytes:
+    """Create a .bdic file content containing a single word (and a placeholder word 'a' or 'I')"""
     dic_data = aff_and_word(word)
     result = hashlib.md5(dic_data)
     md5 = result.digest()
@@ -71,8 +73,3 @@ def bdic(word: str) -> bytes:
     output += md5
     output += dic_data
     return output
-
-def writeToFile(word: str) -> None:
-    with open(f"{word}.bdic", "wb") as f:
-        b = bdic(word)
-        f.write(b)
