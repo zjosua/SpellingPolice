@@ -1,5 +1,8 @@
 """
-Create a new bdic file with a single word
+Create a new bdic file from list of words
+
+Note that it doesn't work with large number of words! 
+Cutoff is at about 7000 words, but it varies. So it is recommended you feed < 5000 words
 
 You can create a bdic file from hunspell .dic and .aff with 
 qwebengine_convert_dict tool that comes with qt
@@ -314,12 +317,13 @@ def create_bdic(words: List[str]) -> bytes:
     return header + md5 + aff + dic
 
 
+# For testing purposes
 if __name__ == "__main__":
     import sys
     from pathlib import Path
 
     input_path = Path(sys.argv[1])
-    output_path = input_path.parent / (input_path.stem + "_py.bdic")
+    output_path = Path(sys.argv[2])
     dic_file = input_path.read_text()
     lines = dic_file.split("\n")[1:]  # first line contains word count
     mwords = map(lambda line: line.strip(), lines)
