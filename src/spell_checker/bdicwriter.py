@@ -158,55 +158,42 @@ def compute_lookup_strategy_details(children: List[DicNode]) -> LookupStrategy:
     return strategy
 
 
-def serialize_leaf(node: DicNode) -> bytes:
-    output = b""
+def serialize_leaf(node: DicNode, output: bytearray) -> None:
     first_affix = 0  # node.affix_indices[0] or 0
     id_byte = (first_affix >> 8) & BDictConst.LEAF_NODE_FIRST_BYTE_AFFIX_MASK
     if node.storage == StorageType.LeafMore:
         id_byte |= BDictConst.LEAF_NODE_ADDITIONAL_VALUE
     # if node.affix_indices.size() > 1 : id_byte |= ...
-    output += id_byte.to_bytes(1, "little")
-    output += (first_affix & 0xFF).to_bytes(1, "little")
+    output.extend(id_byte.to_bytes(1, "little"))
+    output.extend((first_affix & 0xFF).to_bytes(1, "little"))
     if node.storage == StorageType.LeafMore:
         for i in range(len(node.leaf_addition)):
-            output += node.leaf_addition[i : i + 1]
-        output += b"\0"  # c string
+            output.extend(node.leaf_addition[i : i + 1])
+        output.extend(b"\0")  # c string
     # handle affixes...
-    return output
 
 
-def serialize_list(node: DicNode) -> bytes:
-    output = b""
+def serialize_list(node: DicNode, output: bytearray) -> None:
     is_8_bit = node.storage == StorageType.List8
     id_byte = BDictConst.LIST_NODE_TYPE_VALUE
     if not is_8_bit:
         id_byte |= BDictConst.LIST_NODE_16BIT_VALUE
     id_byte |= len(node.children)
-    output += id_byte.to_bytes(1, "little")
+    output.append(id_byte)
 
     bytes_per_entry = 2 if is_8_bit else 3
-    child_outputs: List[bytes] = []
-    child_outputs_offset = 0
-    # instead of reserving space and putting it in-place,
-    # serialize children, then append in order.
-    for child in node.children:
-        child_outputs.append(serialize_trie(child))
-
+    table_begin = len(output)
+    output.extend(b"\0" * len(node.children) * bytes_per_entry)
+    children_begin = len(output)
     for i, child in enumerate(node.children):
-        assert len(child.addition) == 1
-        output += child.addition  # 1 byte
+        idx = table_begin + i * bytes_per_entry
+        output[idx : idx + 1] = child.addition
+        offset = len(output) - children_begin
         if is_8_bit:
-            output += (child_outputs_offset & 0xFF).to_bytes(
-                bytes_per_entry - 1, "little"
-            )
+            output[idx + 1] = offset & 0xFF
         else:
-            output += child_outputs_offset.to_bytes(bytes_per_entry - 1, "little")
-        child_outputs_offset += len(child_outputs[i])
-
-    for child_output in child_outputs:
-        output += child_output
-
-    return output
+            output[idx + 1 : idx + 3] = offset.to_bytes(2, "little")
+        serialize_trie(child, output)
 
 
 """
@@ -225,9 +212,7 @@ for each table item:
 """
 
 
-def serialize_lookup(node: DicNode) -> bytes:
-    output = b""
-
+def serialize_lookup(node: DicNode, output: bytearray) -> None:
     id_byte = BDictConst.LOOKUP_NODE_TYPE_VALUE
     strategy = compute_lookup_strategy_details(node.children)
     is_32_bit = node.storage == StorageType.Lookup32
@@ -239,16 +224,16 @@ def serialize_lookup(node: DicNode) -> bytes:
     if strategy.has_0th_item:
         id_byte |= BDictConst.LOOKUP_NODE_0TH_VALUE
     begin_offset = len(output)
-    output += id_byte.to_bytes(1, "little")
-    output += strategy.first_item.to_bytes(1, "little")
-    output += strategy.list_size.to_bytes(1, "little")
+    output.append(id_byte)
+    output.append(strategy.first_item)
+    output.append(strategy.list_size)
 
     bytes_per_entry = 4 if is_32_bit else 2
     zeroth_item_offset = len(output)
     if strategy.has_0th_item:
-        output += b"\0" * bytes_per_entry
+        output.extend(b"\0" * bytes_per_entry)
     table_begin = len(output)
-    output += b"\0" * (strategy.list_size * bytes_per_entry)
+    output.extend(b"\0" * (strategy.list_size * bytes_per_entry))
     for i, child in enumerate(node.children):
         offset = len(output)
         offset_offset: int
@@ -263,22 +248,20 @@ def serialize_lookup(node: DicNode) -> bytes:
             # Which is not possible with this architecture...
             pass
         else:
-            output = (
-                output[0:offset_offset]
-                + (len(output) - begin_offset).to_bytes(bytes_per_entry, "little")
-                + output[offset_offset + bytes_per_entry :]
-            )
-        output += serialize_trie(child)
+            output[offset_offset : offset_offset + bytes_per_entry] = (
+                len(output) - begin_offset
+            ).to_bytes(bytes_per_entry, "little")
+        serialize_trie(child, output)
     return output
 
 
-def serialize_trie(node: DicNode) -> bytes:
+def serialize_trie(node: DicNode, output: bytearray) -> None:
     if node.storage in [StorageType.Leaf, StorageType.LeafMore]:
-        return serialize_leaf(node)
+        return serialize_leaf(node, output)
     elif node.storage in [StorageType.List16, StorageType.List8]:
-        return serialize_list(node)
+        return serialize_list(node, output)
     elif node.storage in [StorageType.Lookup32, StorageType.Lookup16]:
-        return serialize_lookup(node)
+        return serialize_lookup(node, output)
     else:
         raise Exception("Invalid node.storage")
 
@@ -305,7 +288,9 @@ def dic_bytes(words: List[str]) -> bytes:
     bytewords: List[bytes] = list(map(lambda w: w.encode("utf-8"), words))
     trie_root.build(bytewords, 0, len(bytewords), 0)
     compute_trie_storage(trie_root)
-    return serialize_trie(trie_root)
+    binary = bytearray()
+    serialize_trie(trie_root, binary)
+    return binary
 
 
 def create_bdic(words: List[str]) -> bytes:
