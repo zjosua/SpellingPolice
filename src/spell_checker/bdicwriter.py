@@ -1,9 +1,6 @@
 """
 Create a new bdic file from list of words
 
-Note that it doesn't work with large number of words! 
-Cutoff is at about 7000 words, but it varies. So it is recommended you feed < 5000 words
-
 You can create a bdic file from hunspell .dic and .aff with 
 qwebengine_convert_dict tool that comes with qt
 
@@ -217,9 +214,6 @@ def serialize_lookup(node: DicNode, output: bytearray) -> None:
     strategy = compute_lookup_strategy_details(node.children)
     is_32_bit = node.storage == StorageType.Lookup32
     if is_32_bit:
-        # calculating absolute offset is currently not possible
-        raise Exception("Lookup32 is not supported! (Too many words)")
-    if is_32_bit:
         id_byte |= BDictConst.LOOKUP_NODE_32BIT_VALUE
     if strategy.has_0th_item:
         id_byte |= BDictConst.LOOKUP_NODE_0TH_VALUE
@@ -244,6 +238,9 @@ def serialize_lookup(node: DicNode, output: bytearray) -> None:
             offset_offset = table_begin + table_index * bytes_per_entry
 
         if is_32_bit:
+            output[offset_offset : offset_offset + bytes_per_entry] = len(
+                output
+            ).to_bytes(bytes_per_entry, "little")
             # Have to store absolute byte position.
             # Which is not possible with this architecture...
             pass
@@ -280,26 +277,26 @@ def header_bytes() -> bytes:
     return b"\x42\x44\x69\x63\x02\x00\x00\x00\x20\x00\x00\x00\x83\x00\x00\x00"
 
 
-# May raise an exception if too many words.
-# TODO: make multiple dictionary files for such cases
-def dic_bytes(words: List[str]) -> bytes:
+def dic_bytes(words: List[str], output: bytearray) -> bytes:
     trie_root = DicNode()
     words = sorted(words)
     bytewords: List[bytes] = list(map(lambda w: w.encode("utf-8"), words))
     trie_root.build(bytewords, 0, len(bytewords), 0)
     compute_trie_storage(trie_root)
-    binary = bytearray()
-    serialize_trie(trie_root, binary)
-    return binary
+    serialize_trie(trie_root, output)
 
 
 def create_bdic(words: List[str]) -> bytes:
     """Create a .bdic file content containing a single word (and a placeholder word 'a' or 'I')"""
-    header = header_bytes()
-    aff = aff_bytes()
-    dic = dic_bytes(words)
-    md5 = hashlib.md5(aff + dic).digest()
-    return header + md5 + aff + dic
+    output = bytearray()
+    output.extend(header_bytes())
+    md5_start = len(output)
+    output.extend(b"\0" * 16)  # md5
+    data_start = len(output)
+    output.extend(aff_bytes())
+    dic_bytes(words, output)
+    output[md5_start:data_start] = hashlib.md5(output[data_start:]).digest()
+    return bytes(output)
 
 
 # For testing purposes
