@@ -302,3 +302,19 @@ def create_bdic(words: List[str]) -> bytes:
     dic = dic_bytes(words)
     md5 = hashlib.md5(aff + dic).digest()
     return header + md5 + aff + dic
+
+
+if __name__ == "__main__":
+    import sys
+    from pathlib import Path
+
+    input_path = Path(sys.argv[1])
+    output_path = input_path.parent / (input_path.stem + "_py.bdic")
+    dic_file = input_path.read_text()
+    words = dic_file.split("\n")
+    words = map(lambda line: line.strip(), words)
+    words = filter(lambda i: i, words)
+    words = list(words)
+
+    b = create_bdic(words)
+    output_path.write_bytes(b)
