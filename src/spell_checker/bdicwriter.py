@@ -10,12 +10,11 @@ https://chromium.googlesource.com/chromium/deps/hunspell/+/61b053c9d102442e72af8
 https://chromium.googlesource.com/chromium/deps/hunspell/+/61b053c9d102442e72af854d9f0a28ce60d539f5/google/bdict_writer.cc
 https://chromium.googlesource.com/chromium/src/+/refs/heads/main/chrome/tools/convert_dict/convert_dict.cc
 """
-import enum
 import hashlib
 from typing import List
 
 
-class StorageType(enum):
+class StorageType:
     Undefined = 0
     Leaf = 1
     LeafMore = 2
@@ -51,14 +50,19 @@ class BDictConst:
 
 
 class DicNode:
-    addition: bytes  # 1 byte or None
+    addition: bytes  # always 1 byte
     children: List["DicNode"]
     leaf_addition: bytes
     # affix_indices: List[int]
-    storage: StorageType
+    storage: int  # StorageType
+
+    def __init__(self):
+        self.addition = b"\0"
+        self.children = []
+        self.leaf_addition = b""
 
     # BuildTrie()
-    def build(self, words: List[bytes], begin: int, end: int, depth: int) -> None:
+    def build(self, words: List[bytes], begin: int, end: int, depth: int) -> int:
         begin_str = words[begin]
         if len(begin_str) < depth:
             self.addition = b"\0"
@@ -71,19 +75,20 @@ class DicNode:
             self.addition = b"\0"
         else:
             match_count = 0
-            self.addition = begin_str[depth - 1]
+            self.addition = begin_str[depth - 1 : depth]
             while (
-                begin + match_count < len(words)
-                and words[begin + match_count][depth - 1] == self.addition
+                begin + match_count < end
+                and words[begin + match_count][depth - 1 : depth] == self.addition
             ):
                 match_count += 1
         if match_count == 1:
             # self.affix_indices = words[begin].affix_indices
             self.leaf_addition = begin_str[depth:]
             return begin + 1
-        for i in range(begin, begin + match_count):
+        i = begin
+        while i < begin + match_count:
             cur = DicNode()
-            cur.build(words, i, begin + match_count, depth + 1)
+            i = cur.build(words, i, begin + match_count, depth + 1)
             self.children.append(cur)
         return begin + match_count
 
@@ -139,14 +144,15 @@ def compute_lookup_strategy_details(children: List[DicNode]) -> LookupStrategy:
     if len(children) == 0:
         return strategy
     first_offset = 0
-    if children[0].addition == 0:
+    if children[0].addition == b"\0":
         strategy.has_0th_item = True
         first_offset += 1
     if len(children) == first_offset:
         return strategy
     strategy.first_item = ord(children[first_offset].addition)
     last_item = ord(children[-1].addition)
-    strategy.list_size = last_item - strategy.first_item
+    strategy.list_size = last_item - strategy.first_item + 1
+    return strategy
 
 
 def serialize_leaf(node: DicNode) -> bytes:
@@ -156,12 +162,12 @@ def serialize_leaf(node: DicNode) -> bytes:
     if node.storage == StorageType.LeafMore:
         id_byte |= BDictConst.LEAF_NODE_ADDITIONAL_VALUE
     # if node.affix_indices.size() > 1 : id_byte |= ...
-    output += id_byte.to_bytes(1, "big")
-    output += (first_affix & 0xFF).to_bytes(1, "big")
+    output += id_byte.to_bytes(1, "little")
+    output += (first_affix & 0xFF).to_bytes(1, "little")
     if node.storage == StorageType.LeafMore:
-        for addition in node.leaf_addition:
-            output += addition.encode("utf-8")
-            output += b"\0"  # c string
+        for i in range(len(node.leaf_addition)):
+            output += node.leaf_addition[i : i + 1]
+        output += b"\0"  # c string
     # handle affixes...
     return output
 
@@ -173,7 +179,7 @@ def serialize_list(node: DicNode) -> bytes:
     if not is_8_bit:
         id_byte |= BDictConst.LIST_NODE_16BIT_VALUE
     id_byte |= len(node.children)
-    output += id_byte.to_bytes(1, "big")
+    output += id_byte.to_bytes(1, "little")
 
     bytes_per_entry = 2 if is_8_bit else 3
     child_outputs: List[bytes] = []
@@ -186,12 +192,13 @@ def serialize_list(node: DicNode) -> bytes:
     for i, child in enumerate(node.children):
         assert len(child.addition) == 1
         output += child.addition  # 1 byte
-        output += child_outputs_offset
         if is_8_bit:
-            output += child_outputs_offset.to_bytes(bytes_per_entry, "big") & 0xFF
+            output += (child_outputs_offset & 0xFF).to_bytes(
+                bytes_per_entry - 1, "little"
+            )
         else:
-            output += child_outputs_offset.to_bytes(bytes_per_entry, "big") & 0xFF
-        child_outputs_offset += child_outputs[i]
+            output += child_outputs_offset.to_bytes(bytes_per_entry - 1, "little")
+        child_outputs_offset += len(child_outputs[i])
 
     for child_output in child_outputs:
         output += child_output
@@ -229,16 +236,16 @@ def serialize_lookup(node: DicNode) -> bytes:
     if strategy.has_0th_item:
         id_byte |= BDictConst.LOOKUP_NODE_0TH_VALUE
     begin_offset = len(output)
-    output += id_byte.to_bytes(1, "big")
-    output += strategy.first_item.to_bytes(1, "big")
-    output += strategy.list_size.to_bytes(1, "big")
+    output += id_byte.to_bytes(1, "little")
+    output += strategy.first_item.to_bytes(1, "little")
+    output += strategy.list_size.to_bytes(1, "little")
 
     bytes_per_entry = 4 if is_32_bit else 2
     zeroth_item_offset = len(output)
     if strategy.has_0th_item:
         output += b"\0" * bytes_per_entry
     table_begin = len(output)
-    output += b"\0" * strategy.list_size * bytes_per_entry
+    output += b"\0" * (strategy.list_size * bytes_per_entry)
     for i, child in enumerate(node.children):
         offset = len(output)
         offset_offset: int
@@ -255,8 +262,8 @@ def serialize_lookup(node: DicNode) -> bytes:
         else:
             output = (
                 output[0:offset_offset]
-                + (len(output) - begin_offset).to_bytes(bytes_per_entry, "big")
-                + output[offset_offset + bytes_per_entry]
+                + (len(output) - begin_offset).to_bytes(bytes_per_entry, "little")
+                + output[offset_offset + bytes_per_entry :]
             )
         output += serialize_trie(child)
     return output
@@ -269,6 +276,8 @@ def serialize_trie(node: DicNode) -> bytes:
         return serialize_list(node)
     elif node.storage in [StorageType.Lookup32, StorageType.Lookup16]:
         return serialize_lookup(node)
+    else:
+        raise Exception("Invalid node.storage")
 
 
 def aff_bytes() -> bytes:
@@ -290,8 +299,9 @@ def header_bytes() -> bytes:
 def dic_bytes(words: List[str]) -> bytes:
     trie_root = DicNode()
     words = sorted(words)
-    words: List[bytes] = list(map(lambda w: w.decode("utf-8"), words))
-    trie_root.build(words, 0, len(words), 0)
+    bytewords: List[bytes] = list(map(lambda w: w.encode("utf-8"), words))
+    trie_root.build(bytewords, 0, len(bytewords), 0)
+    compute_trie_storage(trie_root)
     return serialize_trie(trie_root)
 
 
@@ -311,10 +321,10 @@ if __name__ == "__main__":
     input_path = Path(sys.argv[1])
     output_path = input_path.parent / (input_path.stem + "_py.bdic")
     dic_file = input_path.read_text()
-    words = dic_file.split("\n")
-    words = map(lambda line: line.strip(), words)
-    words = filter(lambda i: i, words)
-    words = list(words)
+    lines = dic_file.split("\n")[1:]  # first line contains word count
+    mwords = map(lambda line: line.strip(), lines)
+    fwords = filter(lambda i: i, mwords)
+    words = list(fwords)
 
     b = create_bdic(words)
     output_path.write_bytes(b)
