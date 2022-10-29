@@ -11,7 +11,7 @@ from aqt.qt import *
 from aqt.utils import openFolder, showInfo
 
 from .const import *
-from .custom import add_custom_word, custom_dict_files, custom_words, remove_custom_word
+from .bdicwriter import create_bdic
 
 
 def open_dict_dir() -> None:
@@ -33,8 +33,6 @@ class DictionaryManager:
         self._dicts = [
             i[:-5] for i in os.listdir(DICT_DIR) if RE_DICT_EXT_ENABLED.search(i)
         ]
-        for d in custom_dict_files():
-            self._dicts.append(str(d)[:-5])
 
     def setupMenu(self):
         a = QAction("Dictionary Configuration", mw)
@@ -79,8 +77,8 @@ class DictionaryDialog(QDialog):
 
         bws_btn = QPushButton("Browse")
         bws_btn.clicked.connect(open_dict_dir)
-        custom_words_btn = QPushButton("Custom Words")
-        custom_words_btn.clicked.connect(lambda _: CustomWordsDialog().exec())
+        custom_words_btn = QPushButton("Custom Dictionary")
+        custom_words_btn.clicked.connect(lambda _: CustomDicDialog().exec())
         en_btn = QPushButton("Enable")
         en_btn.clicked.connect(self._enable)
         dis_btn = QPushButton("Disable")
@@ -102,7 +100,6 @@ class DictionaryDialog(QDialog):
 
         try:
             DICT_FILES = os.listdir(DICT_DIR)
-            CUSTOM_DICT_FILES = custom_dict_files()
         except FileNotFoundError:
             showInfo("Missing or no read/write permission to dictionary folder.")
             return
@@ -119,9 +116,6 @@ class DictionaryDialog(QDialog):
                 item = QListWidgetItem(d)
                 item.setData(Qt.ItemDataRole.UserRole, d)
                 self.list.addItem(item)
-
-        for d in CUSTOM_DICT_FILES:
-            self._dict.append(str(d)[:-5])
 
     def _enable(self):
         sel = [i for i in range(self.list.count()) if self.list.item(i).isSelected()]
@@ -151,36 +145,29 @@ class DictionaryDialog(QDialog):
             self._enable()
 
 
-class CustomWordsDialog(QDialog):
+class CustomDicDialog(QDialog):
     def __init__(self):
         QDialog.__init__(self)
-        self.words = set(custom_words())
-        self.restore()
+        Path(CUSTOM_WORDS_TEXT_FILE).touch(exist_ok=True)
         self._setup_dialog()
 
     def _setup_dialog(self) -> None:
-        self.setWindowTitle("Custom Words")
+        self.setWindowTitle("Custom Dictionary")
         self.setWindowModality(Qt.WindowModality.WindowModal)
         self.resize(600, 300)
 
-        word_count_text = QLabel(
-            f"<center>You currently have <b>{len(self.words)}</b> custom words.</center>"
-        )
         instruction_text = QLabel(
-            "<h4>How to add or delete custom words in the dictionary.</h4>"
+            "<h4>How to add or delete words in the custom dictionary.</h4>"
             "1. Click Browse.<br/>"
-            "2. Open 'custom_words.txt'.<br/>"
-            "3. Put in or remove words. The words may be separated by whitespace or new line.<br/>"
+            "2. Open 'CUSTOM_DICTIONARY.txt'.<br/>"
+            "3. Put in one word in each line.<br/>"
             "4. Click Apply to save the text file content into dictionary files.<br/>"
-            "5. If you make a mistake, you can click 'Restore' to restore the text file from the dictionary files. All changes will be lost."
-        )
-        word_count_text.setTextInteractionFlags(
-            Qt.TextInteractionFlag.TextBrowserInteraction
+            "5. If you are editing an existing file, you may want to save a backup before editing in case you mess it up.<br/>"
+            "6. Restart Anki.<br/>"
         )
         instruction_text.setTextInteractionFlags(
             Qt.TextInteractionFlag.TextBrowserInteraction
         )
-        word_count_text.setTextFormat(Qt.TextFormat.RichText)
         instruction_text.setTextFormat(Qt.TextFormat.RichText)
         instruction_text.setWordWrap(True)
         instruction_text.setMinimumWidth(400)
@@ -188,8 +175,6 @@ class CustomWordsDialog(QDialog):
 
         browse_btn = QPushButton("Browse")
         browse_btn.clicked.connect(open_dict_dir)
-        restore_btn = QPushButton("Restore")
-        restore_btn.clicked.connect(self.restore)
         apply_btn = QPushButton("Apply")
         apply_btn.clicked.connect(self.apply)
         apply_btn.setDefault(True)
@@ -197,12 +182,9 @@ class CustomWordsDialog(QDialog):
         btn_box = QHBoxLayout()
         btn_box.addWidget(browse_btn)
         btn_box.addStretch(0)
-        btn_box.addWidget(restore_btn)
         btn_box.addWidget(apply_btn)
 
         layout = QVBoxLayout()
-        layout.addSpacing(5)
-        layout.addWidget(word_count_text)
         layout.addSpacing(5)
         layout.addWidget(instruction_text)
         layout.addStretch(0)
@@ -210,21 +192,8 @@ class CustomWordsDialog(QDialog):
 
         self.setLayout(layout)
 
-    def restore(self) -> None:
-        with open(CUSTOM_WORDS_TEXT_FILE, "w") as f:
-            f.writelines(sorted(self.words))
-
     def apply(self) -> None:
-        new_words = set()
-        with open(CUSTOM_WORDS_TEXT_FILE, "r") as f:
-            for line in f.readlines():
-                new_words.update(line.split(" "))
-
-        new_words = [word for word in new_words if word not in self.words]
-        delete_words = [word for word in self.words if word not in new_words]
-        for word in delete_words:
-            remove_custom_word(word)
-        for word in new_words:
-            add_custom_word(word)
-
+        words = Path(CUSTOM_WORDS_TEXT_FILE).read_text().splitlines()
+        content = create_bdic(words)
+        Path(CUSTOM_DICT_FILE).write_bytes(content)
         self.close()

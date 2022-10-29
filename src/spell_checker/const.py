@@ -32,12 +32,11 @@ else:
     DICT_DIR = os.path.join(moduleDir, "qtwebengine_dictionaries")
 os.environ["QTWEBENGINE_DICTIONARIES_PATH"] = DICT_DIR
 
-CUSTOM_DICT_DIR = os.path.join(DICT_DIR, "custom")
-CUSTOM_WORDS_TEXT_FILE = os.path.join(DICT_DIR, "custom_words.txt")
+CUSTOM_WORDS_TEXT_FILE = os.path.join(DICT_DIR, "CUSTOM_DICTIONARY.txt")
+CUSTOM_DICT_FILE = os.path.join(DICT_DIR, "custom_dictionary.bdic")
 
 try:
     Path(DICT_DIR).mkdir(parents=True, exist_ok=True)
-    Path(CUSTOM_DICT_DIR).mkdir(parents=True, exist_ok=True)
 except:
     print("Can't create dictionary folder, check permissions.")
 
