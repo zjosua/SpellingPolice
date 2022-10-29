@@ -5,6 +5,7 @@
 
 
 import os
+from typing import Optional
 
 from aqt import mw
 from aqt.qt import *
@@ -194,6 +195,15 @@ class CustomDicDialog(QDialog):
 
     def apply(self) -> None:
         words = Path(CUSTOM_WORDS_TEXT_FILE).read_text().splitlines()
-        content = create_bdic(words)
+        aff: Optional[str] = None
+        aff_file = Path(CUSTOM_WORDS_AFF_FILE)
+        if aff_file.exists():
+            aff = aff_file.read_text()
+        else:
+            invalid_char = filter(lambda word: "/" in word, words)
+            if next(invalid_char, None) != None:
+                showInfo("One of the words contain invalid character '/'. Aborting.")
+                return
+        content = create_bdic(words, aff)
         Path(CUSTOM_DICT_FILE).write_bytes(content)
         self.close()

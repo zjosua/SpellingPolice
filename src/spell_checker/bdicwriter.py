@@ -470,8 +470,8 @@ def aff_bytes(
             "ICONV 1",
             "ICONV ’ '"     
         ))
+        # fmt: on
     aff.parse(aff_string)
-    # fmt: on
     serialize_aff(aff, output)
 
 
