@@ -32,6 +32,10 @@ else:
     DICT_DIR = os.path.join(moduleDir, "qtwebengine_dictionaries")
 os.environ["QTWEBENGINE_DICTIONARIES_PATH"] = DICT_DIR
 
+CUSTOM_WORDS_TEXT_FILE = os.path.join(DICT_DIR, "CUSTOM_DICTIONARY.txt")
+CUSTOM_WORDS_AFF_FILE = os.path.join(DICT_DIR, "CUSTOM_DICTIONARY.aff")
+CUSTOM_DICT_FILE = os.path.join(DICT_DIR, "custom_dictionary.bdic")
+
 try:
     Path(DICT_DIR).mkdir(parents=True, exist_ok=True)
 except:
