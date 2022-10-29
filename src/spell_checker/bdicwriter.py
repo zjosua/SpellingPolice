@@ -15,6 +15,9 @@ from typing import List, Dict, Optional, Tuple
 import re
 
 
+# Dic
+
+
 class StorageType:
     Undefined = 0
     Leaf = 1
@@ -94,6 +97,33 @@ class DicNode:
         return begin + match_count
 
 
+class LookupStrategy:
+    has_0th_item: bool
+    first_item: int
+    list_size: int
+
+    def __init__(self):
+        self.has_0th_item = False
+        self.first_item = 0
+        self.list_size = 0
+
+
+def compute_lookup_strategy_details(children: List[DicNode]) -> LookupStrategy:
+    strategy = LookupStrategy()
+    if len(children) == 0:
+        return strategy
+    first_offset = 0
+    if children[0].addition == b"\0":
+        strategy.has_0th_item = True
+        first_offset += 1
+    if len(children) == first_offset:
+        return strategy
+    strategy.first_item = ord(children[first_offset].addition)
+    last_item = ord(children[-1].addition)
+    strategy.list_size = last_item - strategy.first_item + 1
+    return strategy
+
+
 def compute_trie_storage(node: DicNode) -> int:
     if len(node.children) == 0:
         supplimentary_size = 0  # affix size...
@@ -127,33 +157,6 @@ def compute_trie_storage(node: DicNode) -> int:
     node.storage = StorageType.Lookup32
     zeroth_item_size = 4 if strategy.has_0th_item else 0
     return kTableHeaderSize + zeroth_item_size + strategy.list_size * 4 + child_size
-
-
-class LookupStrategy:
-    has_0th_item: bool
-    first_item: int
-    list_size: int
-
-    def __init__(self):
-        self.has_0th_item = False
-        self.first_item = 0
-        self.list_size = 0
-
-
-def compute_lookup_strategy_details(children: List[DicNode]) -> LookupStrategy:
-    strategy = LookupStrategy()
-    if len(children) == 0:
-        return strategy
-    first_offset = 0
-    if children[0].addition == b"\0":
-        strategy.has_0th_item = True
-        first_offset += 1
-    if len(children) == first_offset:
-        return strategy
-    strategy.first_item = ord(children[first_offset].addition)
-    last_item = ord(children[-1].addition)
-    strategy.list_size = last_item - strategy.first_item + 1
-    return strategy
 
 
 def serialize_leaf(node: DicNode, output: bytearray) -> None:
@@ -192,22 +195,6 @@ def serialize_list(node: DicNode, output: bytearray) -> None:
         else:
             output[idx + 1 : idx + 3] = offset.to_bytes(2, "little")
         serialize_trie(child, output)
-
-
-"""
-[begin_offset]
-id_byte (1)
-strategy.first_table_item (1)
-strategy.table_item_count (1)
-[zeroth_item_offset]
-0th_entry? (bytes_per_entry if 0th_entry else 0)
-[table_begin]
-for each table item:
-    child.entry (bytes_per_entry)
-for each table item:
-    [offset]
-    serialize_trie
-"""
 
 
 def serialize_lookup(node: DicNode, output: bytearray) -> None:
@@ -262,6 +249,9 @@ def serialize_trie(node: DicNode, output: bytearray) -> None:
         return serialize_lookup(node, output)
     else:
         raise Exception("Invalid node.storage")
+
+
+# Affix
 
 
 class Aff:
@@ -449,6 +439,13 @@ def serialize_aff(aff: Aff, output: bytearray) -> None:
     output[header_offset + 12 : header_offset + 16] = other_offset.to_bytes(4, "little")
 
 
+# Create bdic file
+
+
+def header_bytes() -> bytes:
+    return b"\x42\x44\x69\x63\x02\x00\x00\x00\x20\x00\x00\x00\x83\x00\x00\x00"
+
+
 def aff_bytes(
     output: bytearray, aff_string: Optional[str] = None, chars: str = ""
 ) -> None:
@@ -473,10 +470,6 @@ def aff_bytes(
         # fmt: on
     aff.parse(aff_string)
     serialize_aff(aff, output)
-
-
-def header_bytes() -> bytes:
-    return b"\x42\x44\x69\x63\x02\x00\x00\x00\x20\x00\x00\x00\x83\x00\x00\x00"
 
 
 def dic_bytes(words: List[str], output: bytearray) -> bytes:
