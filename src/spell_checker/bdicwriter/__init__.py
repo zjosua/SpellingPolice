@@ -1,15 +1,18 @@
 """
-Create a new bdic file from list of words
+This is a python port of chromium's convert_dict tool.
 
-You can create a bdic file from hunspell .dic and .aff with 
-qwebengine_convert_dict tool that comes with qt
+Copyright 2006-2008 The Chromium Authors
+Copyright 2022 AnkingMed
+
+Use of this source code is governed by a BSD-style license that can be
+found in the LICENSE file.
 
 Useful Links
 https://spylls.readthedocs.io/en/latest/hunspell.html#code-walkthrough
-https://chromium.googlesource.com/chromium/deps/hunspell/+/61b053c9d102442e72af854d9f0a28ce60d539f5/google/bdict.h
-https://chromium.googlesource.com/chromium/deps/hunspell/+/61b053c9d102442e72af854d9f0a28ce60d539f5/google/bdict_writer.cc
+https://chromium.googlesource.com/chromium/src/+/refs/heads/main/third_party/hunspell/google/bdict_writer.cc
 https://chromium.googlesource.com/chromium/src/+/refs/heads/main/chrome/tools/convert_dict/convert_dict.cc
 """
+
 import hashlib
 from typing import List, Dict, Optional, Tuple
 import re
@@ -57,7 +60,7 @@ class DicNode:
     addition: bytes  # always 1 byte
     children: List["DicNode"]
     leaf_addition: bytes
-    # affix_indices: List[int]
+    # affix_indices: List[int] Not yet supported
     storage: int  # StorageType
 
     def __init__(self):
@@ -229,9 +232,6 @@ def serialize_lookup(node: DicNode, output: bytearray) -> None:
             output[offset_offset : offset_offset + bytes_per_entry] = len(
                 output
             ).to_bytes(bytes_per_entry, "little")
-            # Have to store absolute byte position.
-            # Which is not possible with this architecture...
-            pass
         else:
             output[offset_offset : offset_offset + bytes_per_entry] = (
                 len(output) - begin_offset
@@ -482,7 +482,10 @@ def dic_bytes(words: List[str], output: bytearray) -> bytes:
 
 
 def create_bdic(words: List[str], aff: Optional[str] = None) -> bytes:
-    """Create a .bdic file content containing a single word (and a placeholder word 'a' or 'I')"""
+    """
+    Create a new bdic file from list of words and aff string.
+    Note that most aff commands are not supported.
+    """
     possible_chars = set()
     for word in words:
         for c in word:
