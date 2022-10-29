@@ -11,7 +11,8 @@ https://chromium.googlesource.com/chromium/deps/hunspell/+/61b053c9d102442e72af8
 https://chromium.googlesource.com/chromium/src/+/refs/heads/main/chrome/tools/convert_dict/convert_dict.cc
 """
 import hashlib
-from typing import List
+from typing import List, Dict, Optional, Tuple
+import re
 
 
 class StorageType:
@@ -263,14 +264,215 @@ def serialize_trie(node: DicNode, output: bytearray) -> None:
         raise Exception("Invalid node.storage")
 
 
-def aff_bytes() -> bytes:
+class Aff:
+    intro_comment_: str
+    encoding_: str
+    affix_groups_: Dict[str, int]
+    has_indexed_affixes_: bool
+    affix_rules_: List[str]
+    replacements_: List[Tuple[str, str]]
+    other_commands_: List[str]
+
+    def __init__(self):
+        self.intro_comment_ = ""
+        self.encoding_ = ""
+        self.affix_groups_ = {}
+        self.has_indexed_affixes_ = False
+        self.affix_rules_ = []
+        self.replacements_ = []
+        self.other_commands_ = []
+
+    @staticmethod
+    def strip_comments(line: str) -> str:
+        return line.split("#")[0].strip()
+
+    @staticmethod
+    def collapse_duplicate_spaces(line: str) -> str:
+        multi = re.compile(" +")
+        return re.sub(multi, " ", line)
+
+    def get_af_index_for_af_string(self, af_string: str) -> int:
+        if af_string in self.affix_groups_:
+            return self.affix_groups_[af_string][1]
+        return self.add_affix_group(af_string)
+
+    def parse(self, aff_str: str) -> None:
+        lines = aff_str.split("\n")
+        got_command = False
+        got_first_af = False
+        got_first_rep = False
+        self.has_indexed_affixes_ = False
+        for line in lines:
+            if not got_command and len(line) > 0 and line[0] == "#":
+                self.intro_comment_ += line
+                self.intro_comment_ += "\n"
+                continue
+            line = Aff.strip_comments(line)
+            if line == "":
+                continue
+            got_command = True
+            if line.startswith("SET "):
+                self.encoding_ = line[4:].strip()
+            elif line.startswith("AF "):
+                self.has_indexed_affixes_ = True
+                if got_first_af:
+                    self.add_affix_group(line[3:])
+                else:
+                    got_first_af = True
+            elif line.startswith("SFX ") or line.startswith("PFX "):
+                self.add_affix(line)
+            elif line.startswith("REP "):
+                if got_first_rep:
+                    self.add_replacement(line[4:])
+                else:
+                    got_first_rep = True
+            elif line.startswith("TRY ") or line.startswith("MAP "):
+                self.handle_encoded_command(line)
+            elif line.startswith("IGNORE "):
+                raise Exception("IGNORE command not supported")
+            elif line.startswith("COMPLEXPREFIXES"):
+                raise Exception("COMPLEXPREFIXES command not supported")
+            else:
+                self.handle_raw_command(line)
+
+    def add_affix_group(self, rule: str) -> int:
+        rule = rule.strip()
+        affix_id = len(self.affix_groups_) + 1
+        self.affix_groups_[rule] = affix_id
+        return affix_id
+
+    def add_affix(self, rule: str) -> None:
+        rule = rule.strip()
+        rule = Aff.collapse_duplicate_spaces(rule)
+        found_spaces = 0
+        token = ""
+        for i in range(len(rule)):
+            if rule[i] == " ":
+                found_spaces += 1
+                if found_spaces == 3:
+                    part_start = i
+                    if token[0] != "Y" and token[0] != "N":
+                        part_start = i - len(token)
+                    part = rule[part_start:]
+                    if part.find("-") != -1:
+                        tokens = list(map(lambda i: i.strip(), part.split(" ")))
+                        if len(tokens) >= 5:
+                            # cstr has ending null char
+                            part = "{}\0 {}\0/{}\0 {}\0".format(
+                                tokens[0], tokens[1], tokens[4], tokens[2]
+                            )
+                    slash_index = part.find("/")
+                    if slash_index != -1 and not self.has_indexed_affixes_:
+                        before_flags = part[0 : slash_index + 1]
+                        after_slash = list(
+                            map(lambda i: i.strip(), part[slash_index + 1 :].split(" "))
+                        )
+                        if len(after_slash) == 0:
+                            raise Exception(
+                                f"Found 0 terms after slash in affix rule '{part}' but need at least 2."
+                            )
+                        if len(after_slash) == 1:
+                            print(
+                                f"Warning: Found 1 term after slash in affix rule '{part}', but expected at least 2. Adding '.'."
+                            )
+                            after_slash.append(".")
+                        part = "{}\0{} {}\0".format(
+                            before_flags,
+                            self.get_af_index_for_af_string(after_slash[0]),
+                            after_slash[1],
+                        )
+                    rule = rule[0:part_start] + part
+                    break
+                token = ""
+            else:
+                token += rule[i]
+        self.affix_rules_.append(rule)
+
+    def add_replacement(self, rule: str) -> None:
+        rule = rule.strip()
+        rule = Aff.collapse_duplicate_spaces(rule)
+        split = rule.split(" ", maxsplit=1)
+        split[0].replace("_", " ")
+        split[1].replace("_", " ")
+        self.replacements_.append((split[0], split[1]))
+
+    def handle_raw_command(self, line: str) -> None:
+        self.other_commands_.append(line)
+
+    def handle_encoded_command(self, line: str) -> None:
+        self.other_commands_.append(line)
+
+
+def serialize_string_list_null_term(strings: List[str], output: bytearray) -> None:
+    for string in strings:
+        if string == "":
+            output.extend(b" ")
+        else:
+            output.extend(string.encode("utf-8"))
+        output.append(0)
+    output.append(0)
+
+
+def serialize_replacements(
+    replacements: List[Tuple[str, str]], output: bytearray
+) -> None:
+    for replacement in replacements:
+        output.extend(replacement[0].encode("utf-8"))
+        output.append(0)
+        output.extend(replacements[1].encode("utf-8"))
+        output.append(0)
+    output.append(0)
+
+
+def serialize_aff(aff: Aff, output: bytearray) -> None:
+    header_offset = len(output)
+    AFF_HEADER_SIZE = 16
+    output.extend(b"\0" * AFF_HEADER_SIZE)
+    output.extend(b"\n")
+    output.extend(aff.intro_comment_.encode("utf-8"))  # comment_ = aff.comments()
+    output.extend(b"\n")
+    affix_group_offset = len(output)
+    output.extend(f"AF {len(aff.affix_groups_)}".encode("utf-8"))
+    output.append(0)
+    serialize_string_list_null_term(aff.affix_groups_, output)
+    affix_rule_offset = len(output)
+    serialize_string_list_null_term(aff.affix_rules_, output)
+    rep_offset = len(output)
+    serialize_replacements(aff.replacements_, output)
+    other_offset = len(output)
+    serialize_string_list_null_term(aff.other_commands_, output)
+    output[header_offset : header_offset + 4] = affix_group_offset.to_bytes(4, "little")
+    output[header_offset + 4 : header_offset + 8] = affix_rule_offset.to_bytes(
+        4, "little"
+    )
+    output[header_offset + 8 : header_offset + 12] = rep_offset.to_bytes(4, "little")
+    output[header_offset + 12 : header_offset + 16] = other_offset.to_bytes(4, "little")
+
+
+def aff_bytes(
+    output: bytearray, aff_string: Optional[str] = None, chars: str = ""
+) -> None:
     """
-    SET UTF-8
-    TRY esianrtolcdugmphbyfvkwzESIANRTOLCDUGMPHBYFVKWZ'
-    ICONV 1
-    ICONV ’ '
+    - chars: List of valid characters to spellcheck. If unspecified defaults to english characters.
+             Ignored if aff_string is set.
     """
-    return b"\x32\x00\x00\x00\x38\x00\x00\x00\x39\x00\x00\x00\x3A\x00\x00\x00\x0A\x0A\x41\x46\x20\x30\x00\x00\x00\x00\x54\x52\x59\x20\x65\x73\x69\x61\x6E\x72\x74\x6F\x6C\x63\x64\x75\x67\x6D\x70\x68\x62\x79\x66\x76\x6B\x77\x7A\x45\x53\x49\x41\x4E\x52\x54\x4F\x4C\x43\x44\x55\x47\x4D\x50\x48\x42\x59\x46\x56\x4B\x57\x5A\x27\x00\x49\x43\x4F\x4E\x56\x20\x31\x00\x49\x43\x4F\x4E\x56\x20\xE2\x80\x99\x20\x27\x00\x00"
+    aff = Aff()
+    if aff_string is None:
+        try_chars = "esianrtolcdugmphbyfvkwzESIANRTOLCDUGMPHBYFVKWZ'"
+        for char in chars:
+            if char not in try_chars:
+                try_chars += char
+
+        # fmt: off
+        aff_string = "\n".join((       
+            "SET UTF-8",
+            f"TRY {try_chars}",
+            "ICONV 1",
+            "ICONV ’ '"     
+        ))
+    aff.parse(aff_string)
+    # fmt: on
+    serialize_aff(aff, output)
 
 
 def header_bytes() -> bytes:
@@ -286,14 +488,22 @@ def dic_bytes(words: List[str], output: bytearray) -> bytes:
     serialize_trie(trie_root, output)
 
 
-def create_bdic(words: List[str]) -> bytes:
+def create_bdic(words: List[str], aff: Optional[str] = None) -> bytes:
     """Create a .bdic file content containing a single word (and a placeholder word 'a' or 'I')"""
+    possible_chars = set()
+    for word in words:
+        for c in word:
+            possible_chars.add(c)
+
     output = bytearray()
     output.extend(header_bytes())
     md5_start = len(output)
     output.extend(b"\0" * 16)  # md5
     data_start = len(output)
-    output.extend(aff_bytes())
+    if aff is None:
+        aff_bytes(output, chars="".join(possible_chars))
+    else:
+        aff_bytes(output, aff_string=aff)
     dic_bytes(words, output)
     output[md5_start:data_start] = hashlib.md5(output[data_start:]).digest()
     return bytes(output)
@@ -304,13 +514,19 @@ if __name__ == "__main__":
     import sys
     from pathlib import Path
 
-    input_path = Path(sys.argv[1])
-    output_path = Path(sys.argv[2])
-    dic_file = input_path.read_text()
+    input_dic = Path(sys.argv[1])
+    input_aff = input_dic.parent / (input_dic.stem + ".aff")
+    output_bdic = Path(sys.argv[2])
+    dic_file = input_dic.read_text()
     lines = dic_file.split("\n")[1:]  # first line contains word count
-    mwords = map(lambda line: line.strip(), lines)
-    fwords = filter(lambda i: i, mwords)
-    words = list(fwords)
+    words = list(filter(lambda i: i, map(lambda line: line.strip(), lines)))
 
-    b = create_bdic(words)
-    output_path.write_bytes(b)
+    aff_string: Optional[str] = None
+    if input_aff.exists():
+        print("Using input aff")
+        aff_string = input_aff.read_text()
+    else:
+        print("Using default aff")
+
+    b = create_bdic(words, aff=aff_string)
+    output_bdic.write_bytes(b)
