@@ -151,28 +151,21 @@ class CustomDicDialog(QDialog):
         QDialog.__init__(self)
         Path(CUSTOM_WORDS_TEXT_FILE).touch(exist_ok=True)
         self._setup_dialog()
+        self.load_words()
 
     def _setup_dialog(self) -> None:
         self.setWindowTitle("Custom Dictionary")
         self.setWindowModality(Qt.WindowModality.WindowModal)
         self.resize(600, 300)
 
-        instruction_text = QLabel(
-            "<h4>How to add or delete words in the custom dictionary.</h4>"
-            "1. Click Browse.<br/>"
-            "2. Open 'CUSTOM_DICTIONARY.txt'.<br/>"
-            "3. Put in one word in each line.<br/>"
-            "4. Click Apply to save the text file content into dictionary files.<br/>"
-            "5. If you are editing an existing file, you may want to save a backup before editing in case you mess it up.<br/>"
-            "6. Restart Anki.<br/>"
-        )
+        instruction_text = QLabel("Put one word in each line.")
         instruction_text.setTextInteractionFlags(
             Qt.TextInteractionFlag.TextBrowserInteraction
         )
-        instruction_text.setTextFormat(Qt.TextFormat.RichText)
-        instruction_text.setWordWrap(True)
-        instruction_text.setMinimumWidth(400)
-        instruction_text.setMinimumHeight(200)
+        text_edit = QTextEdit(self)
+        text_edit.setAcceptRichText(False)
+        text_edit.setMaximumHeight(9999)
+        self.text_edit = text_edit
 
         browse_btn = QPushButton("Browse")
         browse_btn.clicked.connect(open_dict_dir)
@@ -186,15 +179,20 @@ class CustomDicDialog(QDialog):
         btn_box.addWidget(apply_btn)
 
         layout = QVBoxLayout()
-        layout.addSpacing(5)
+        layout.addSpacing(3)
         layout.addWidget(instruction_text)
-        layout.addStretch(0)
+        layout.addWidget(text_edit)
         layout.addLayout(btn_box)
 
         self.setLayout(layout)
 
+    def load_words(self) -> None:
+        text = Path(CUSTOM_WORDS_TEXT_FILE).read_text()
+        self.text_edit.setPlainText(text)
+
     def apply(self) -> None:
-        words = Path(CUSTOM_WORDS_TEXT_FILE).read_text().splitlines()
+        words = self.text_edit.toPlainText().splitlines()
+        words = list(sorted(words))
         aff: Optional[str] = None
         aff_file = Path(CUSTOM_WORDS_AFF_FILE)
         if aff_file.exists():
@@ -206,4 +204,5 @@ class CustomDicDialog(QDialog):
                 return
         content = create_bdic(words, aff)
         Path(CUSTOM_DICT_FILE).write_bytes(content)
+        Path(CUSTOM_WORDS_TEXT_FILE).write_text("\n".join(words))
         self.close()
