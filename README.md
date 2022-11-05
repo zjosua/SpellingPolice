@@ -12,8 +12,9 @@ It uses .bdic files which is used by chrome.
 
 
 Dictionaries installed by default:
-- `med_glutanimate.bdic` is from: https://github.com/glutanimate/hunspell-en-med-glut-workaround
+- `glutanimate_medical.bdic` is from: https://github.com/glutanimate/hunspell-en-med-glut-workaround
 - `en-US-10-1.bdic` is from the chromium browser.
+- `anki.bdic` contains words for Anki usage.
 
 You can download some of them here: https://github.com/cvsuser-chromium/third_party_hunspell_dictionaries  
 
