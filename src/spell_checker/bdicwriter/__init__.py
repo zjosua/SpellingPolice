@@ -45,15 +45,18 @@ def aff_bytes(
     """
     aff = Aff()
     if aff_string is None:
-        try_chars = "esianrtolcdugmphbyfvkwzESIANRTOLCDUGMPHBYFVKWZ'"
+        try_chars = "esianrtolcdugmphbyfvkwzESIANRTOLCDUGMPHBYFVKWZ"
+        word_chars = ""
         for char in chars:
             if char not in try_chars:
                 try_chars += char
+                word_chars += char
 
         # fmt: off
         aff_string = "\n".join((       
             "SET UTF-8",
             f"TRY {try_chars}",
+            f"WORDCHARS {word_chars}" if word_chars else "",
             "ICONV 1",
             "ICONV ’ '"     
         ))
