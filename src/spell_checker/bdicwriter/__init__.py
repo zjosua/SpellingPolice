@@ -20,8 +20,20 @@ from .aff import Aff, serialize_aff
 from .dic import DicNode, serialize_trie, compute_trie_storage
 
 
-def header_bytes() -> bytes:
-    return b"\x42\x44\x69\x63\x02\x00\x00\x00\x20\x00\x00\x00\x83\x00\x00\x00"
+VER = 2
+DATA_START = 32
+
+
+def reserve_header(output: bytearray) -> None:
+    output.extend(b"\0" * DATA_START)
+
+
+def write_header(output: bytearray, dic_start: int) -> None:
+    output[0:4] = b"BDic"
+    output[4:8] = VER.to_bytes(4, byteorder="little")
+    output[8:12] = DATA_START.to_bytes(4, byteorder="little")
+    output[12:16] = dic_start.to_bytes(4, byteorder="little")
+    output[16:DATA_START] = hashlib.md5(output[DATA_START:]).digest()
 
 
 def aff_bytes(
@@ -70,14 +82,13 @@ def create_bdic(words: List[str], aff: Optional[str] = None) -> bytes:
             possible_chars.add(c)
 
     output = bytearray()
-    output.extend(header_bytes())
-    md5_start = len(output)
-    output.extend(b"\0" * 16)  # md5
-    data_start = len(output)
+    reserve_header(output)
+
     if aff is None:
         aff_bytes(output, chars="".join(possible_chars))
     else:
         aff_bytes(output, aff_string=aff)
+    dic_start = len(output)
     dic_bytes(words, output)
-    output[md5_start:data_start] = hashlib.md5(output[data_start:]).digest()
+    write_header(output, dic_start)
     return bytes(output)
