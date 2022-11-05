@@ -14,9 +14,12 @@ from aqt.webview import AnkiWebView
 from anki.hooks import wrap, addHook
 from anki.lang import _
 from functools import partial
+from pathlib import Path
+import shutil
 
 from .dict import DictionaryManager
 from .config import Config
+from .const import BUNDLED_DICTS_DIR, DICT_DIR
 
 ADDON_NAME = "Spell Checker"
 conf = Config(ADDON_NAME)
@@ -70,6 +73,21 @@ def _contextMenuRequest(web: AnkiWebView):
     else:
         raise RuntimeError("unkown qt version")
 
+
+def install_initial_dictionaries():
+    installed_dict = conf.get("installed_dict", {})
+    print(installed_dict)
+    for child in Path(BUNDLED_DICTS_DIR).iterdir():
+        if child.is_file() and child.suffix == ".bdic":
+            name = child.stem
+            if not installed_dict.get(name, False):
+                shutil.copy(child, DICT_DIR)
+            installed_dict[name] = True
+            # Save progress even if one dict fails to install
+            conf.set("installed_dict", installed_dict)
+
+
+install_initial_dictionaries()
 
 addHook("EditorWebView.contextMenuEvent", onContextMenuEvent)
 addHook("AnkiWebView.contextMenuEvent", onContextMenuEvent)

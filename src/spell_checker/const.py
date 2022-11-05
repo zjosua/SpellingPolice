@@ -32,6 +32,9 @@ else:
     DICT_DIR = os.path.join(moduleDir, "qtwebengine_dictionaries")
 os.environ["QTWEBENGINE_DICTIONARIES_PATH"] = DICT_DIR
 
+
+BUNDLED_DICTS_DIR = os.path.join(ADDON_PATH, "dictionaries")
+
 CUSTOM_WORDS_TEXT_FILE = os.path.join(DICT_DIR, "CUSTOM_DICTIONARY.txt")
 CUSTOM_WORDS_AFF_FILE = os.path.join(DICT_DIR, "CUSTOM_DICTIONARY.aff")
 CUSTOM_DICT_FILE = os.path.join(DICT_DIR, "custom_dictionary.bdic")

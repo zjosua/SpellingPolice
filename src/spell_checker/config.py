@@ -23,24 +23,17 @@ class Config:
 
     def __init__(self, addonName):
         self.addonName = addonName
-        addHook("profileLoaded", self._onProfileLoaded)
+        self._loadConfig()
 
     def set(self, key, value):
         self.config[key] = value
+        self._saveConfig()
 
     def get(self, key, default=None):
         return self.config.get(key, default)
 
     def has(self, key):
         return self.config.get(key) != None
-
-    def _onProfileLoaded(self):
-        if ANKI21:  # or ccbc
-            self._loadConfig()
-        else:
-            # wait for addonManager21 to load first.
-            # Timer is no longer necessary for newer versions of AddonManager21
-            mw.progress.timer(300, self._loadConfig, False)
 
     def _loadConfig(self):
         if getattr(mw.addonManager, "getConfig", None):
@@ -70,6 +63,9 @@ class Config:
             if jsn:
                 return json.loads(data)
             return data
+
+    def _saveConfig(self):
+        mw.addonManager.writeConfig(__name__, self.config)
 
 
 # From: https://stackoverflow.com/questions/3232943/

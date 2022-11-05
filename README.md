@@ -10,6 +10,11 @@ This addon follows that idea and is off by default, but when turned on, spelling
 ## Dictionaries:
 It uses .bdic files which is used by chrome.
 
+
+Dictionaries installed by default:
+- `med_glutanimate.bdic` is from: https://github.com/glutanimate/hunspell-en-med-glut-workaround
+- `en-US-10-1.bdic` is from the chromium browser.
+
 You can download some of them here: https://github.com/cvsuser-chromium/third_party_hunspell_dictionaries  
 
 Here is one example file: https://github.com/cvsuser-chromium/third_party_hunspell_dictionaries/blob/master/en-US-3-0.bdic
