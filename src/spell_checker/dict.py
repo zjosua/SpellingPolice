@@ -13,6 +13,7 @@ from aqt.utils import openFolder, showInfo
 
 from .const import *
 from .bdicwriter import create_bdic
+from .anking_menu import get_anking_menu
 
 
 def open_dict_dir() -> None:
@@ -36,9 +37,10 @@ class DictionaryManager:
         ]
 
     def setupMenu(self):
-        a = QAction("Dictionary Configuration", mw)
+        menu = get_anking_menu()
+        a = QAction("Spell Checker Dictionaries", menu)
+        menu.addAction(a)
         a.triggered.connect(self.showConfig)
-        mw.form.menuTools.addAction(a)
 
     def showConfig(self):
         profile = mw.web._page.profile()

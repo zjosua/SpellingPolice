@@ -76,7 +76,6 @@ def _contextMenuRequest(web: AnkiWebView):
 
 def install_initial_dictionaries():
     installed_dict = conf.get("installed_dict", {})
-    print(installed_dict)
     for child in Path(BUNDLED_DICTS_DIR).iterdir():
         if child.is_file() and child.suffix == ".bdic":
             name = child.stem
