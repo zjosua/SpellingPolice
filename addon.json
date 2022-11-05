@@ -1,6 +1,6 @@
 {
-    "display_name": "Spell Checker",
-    "module_name": "spell_checker",
+    "display_name": "Spell Checker with Custom Dictionaries",
+    "module_name": "spell_checker_with_custom_dictionaries",
     "repo_name": "spell-checker-addon",
     "ankiweb_id": "1410276506",
     "author": "",

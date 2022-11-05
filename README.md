@@ -1,4 +1,4 @@
-## Spelling Police: Tough love spell checker for the editor
+## Spell Checker with Custom Dictionaries
 
 <img src="https://github.com/lovac42/SpellingPolice/blob/master/screenshots/intro.png?raw=true">
 

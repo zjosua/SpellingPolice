@@ -21,7 +21,7 @@ from .dict import DictionaryManager
 from .config import Config
 from .const import BUNDLED_DICTS_DIR, DICT_DIR
 
-ADDON_NAME = "Spell Checker"
+ADDON_NAME = "Spell Checker with Custom Dictionaries"
 conf = Config(ADDON_NAME)
 
 dictMan = DictionaryManager()

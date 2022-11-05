@@ -1,7 +1,7 @@
-# Spell Checker
+# Spell Checker with Custom Dictionaries
 
 ## auto_startup
-Spelling popo is turned on by default?
+Spell checker is turned on by default?
 
 ## bold_text
 Display autocorrect suggestions in bold font.
