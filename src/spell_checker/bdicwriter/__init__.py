@@ -62,7 +62,7 @@ def aff_bytes(
     serialize_aff(aff, output)
 
 
-def dic_bytes(words: List[str], output: bytearray) -> bytes:
+def dic_bytes(words: List[str], output: bytearray) -> None:
     trie_root = DicNode()
     words = sorted(words)
     bytewords: List[bytes] = list(map(lambda w: w.encode("utf-8"), words))

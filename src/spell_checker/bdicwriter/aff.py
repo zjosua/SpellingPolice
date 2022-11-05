@@ -8,7 +8,7 @@ Use of this source code is governed by a BSD-style license that can be
 found in the LICENSE file.
 """
 import re
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Iterable
 
 
 class Aff:
@@ -40,7 +40,7 @@ class Aff:
 
     def get_af_index_for_af_string(self, af_string: str) -> int:
         if af_string in self.affix_groups_:
-            return self.affix_groups_[af_string][1]
+            return self.affix_groups_[af_string]
         return self.add_affix_group(af_string)
 
     def parse(self, aff_str: str) -> None:
@@ -150,7 +150,7 @@ class Aff:
         self.other_commands_.append(line)
 
 
-def serialize_string_list_null_term(strings: List[str], output: bytearray) -> None:
+def serialize_string_list_null_term(strings: Iterable[str], output: bytearray) -> None:
     for string in strings:
         if string == "":
             output.extend(b" ")
@@ -166,7 +166,7 @@ def serialize_replacements(
     for replacement in replacements:
         output.extend(replacement[0].encode("utf-8"))
         output.append(0)
-        output.extend(replacements[1].encode("utf-8"))
+        output.extend(replacement[1].encode("utf-8"))
         output.append(0)
     output.append(0)
 

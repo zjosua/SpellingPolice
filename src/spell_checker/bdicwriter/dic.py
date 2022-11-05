@@ -226,7 +226,6 @@ def serialize_lookup(node: DicNode, output: bytearray) -> None:
                 len(output) - begin_offset
             ).to_bytes(bytes_per_entry, "little")
         serialize_trie(child, output)
-    return output
 
 
 def serialize_trie(node: DicNode, output: bytearray) -> None:
