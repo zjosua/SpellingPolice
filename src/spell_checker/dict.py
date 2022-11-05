@@ -158,7 +158,7 @@ class CustomDicDialog(QDialog):
         self.setWindowModality(Qt.WindowModality.WindowModal)
         self.resize(600, 300)
 
-        instruction_text = QLabel("Put one word in each line.")
+        instruction_text = QLabel("Put one word in each line. Restart Anki afterwards.")
         instruction_text.setTextInteractionFlags(
             Qt.TextInteractionFlag.TextBrowserInteraction
         )
