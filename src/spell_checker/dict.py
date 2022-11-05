@@ -149,6 +149,8 @@ class DictionaryDialog(QDialog):
 
 
 class CustomDicDialog(QDialog):
+    saved = False
+
     def __init__(self):
         QDialog.__init__(self)
         Path(CUSTOM_WORDS_TEXT_FILE).touch(exist_ok=True)
@@ -207,4 +209,19 @@ class CustomDicDialog(QDialog):
         content = create_bdic(words, aff)
         Path(CUSTOM_DICT_FILE).write_bytes(content)
         Path(CUSTOM_WORDS_TEXT_FILE).write_text("\n".join(words))
+        self.saved = True
         self.close()
+
+    def closeEvent(self, event: QCloseEvent) -> None:
+        if not self.saved:
+            resp = QMessageBox.question(
+                self,
+                "Discard changes?",
+                "Closing this window will discard changes. Are you sure?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No,
+            )
+            if resp != QMessageBox.StandardButton.Yes:
+                event.ignore()
+                return
+        event.accept()
