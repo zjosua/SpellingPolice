@@ -1,0 +1,19 @@
+SET UTF-8
+
+COMPOUNDMIN 1
+ONLYINCOMPOUND S
+
+# Cloze deletion `c[0-9]*`
+# `oc[0-9]*` for cloze overlapper
+COMPOUNDRULE 2
+COMPOUNDRULE cn*
+COMPOUNDRULE sd*S
+
+WORDCHARS 0123456789'.:
+
+# Affixes
+# c: c | oc    ; cloze deletion prefix
+# n: 0-9       ; number
+# d: [A-z,0-9] ; any single letter
+# s: sound:    ; sound prefix
+# S: .mp3 | ...; sound extension
