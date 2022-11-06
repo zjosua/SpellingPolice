@@ -8,30 +8,33 @@ If you read "The Shallows", it describes the over reliance of spell checkers in 
 This addon follows that idea and is off by default, but when turned on, spelling police nags you and points out all your spelling errors. It does not fix spelling mistakes for you. That's your job. This tough love approach will help you to learn to spell better.
 
 ## Dictionaries:
-It uses .bdic files which is used by chrome.
 
-
-Dictionaries installed by default:
+The following dictionaries are installed by default:
 - `glutanimate_medical.bdic` is from: https://github.com/glutanimate/hunspell-en-med-glut-workaround
 - `en-US-10-1.bdic` is from the chromium browser.
 - `anki.bdic` contains words for Anki usage.
 
-You can download some of them here: https://github.com/cvsuser-chromium/third_party_hunspell_dictionaries  
+You can add more dictionaries by downloading the dictionary files. The add-on uses .bdic files used by Chrome.
 
-Here is one example file: https://github.com/cvsuser-chromium/third_party_hunspell_dictionaries/blob/master/en-US-3-0.bdic
+You can download more .bdic files here:
+- https://github.com/cvsuser-chromium/third_party_hunspell_dictionaries 
+- https://github.com/lovac42/SpellingPolice/issues/8
 
-There are more user-created dictionaries posted in this [issue](https://github.com/lovac42/SpellingPolice/issues/8). 
-
-## Setup:
-Go to `Tools > Dictionary Configurations` and click the browse button. Put all your .bdic files into this "dictionaries" folder. You may need to restart the first time after installing new dictionaries.
+After downloading the .bdic files, go to `Anking > Spell Checker Dictionaries` and click the browse button. Put all your .bdic files into this "dictionaries" folder. You may need to restart Anki after installing new dictionaries.
 
 Once you have it setup, enable or disable the dictionaries of your choice. More than one is allowed, but try to avoid language conflicts (e.g. Chinese and Japanese).
 
-<img src="https://github.com/lovac42/SpellingPolice/blob/master/screenshots/setup.png?raw=true">  
+<img src="https://github.com/AnKing-Memberships/spell-checker-addon/blob/master/screenshots/setup.png?raw=true">  
 
-<img src="https://github.com/lovac42/SpellingPolice/blob/master/screenshots/dictMan.png?raw=true">  
+<img src="https://github.com/AnKing-Memberships/spell-checker-addon/blob/master/screenshots/dictionaries.png?raw=true">  
 
-<img src="https://github.com/lovac42/SpellingPolice/blob/master/screenshots/folder.png?raw=true">  
+### Custom Dictionary
+
+You can create your own custom dictionary. Go to `Anking > Spell Checker Dictionaries` and click the 'Custom Dictionary' button. 
+
+Add one word in each line, click Apply, then restart Anki.
+
+<img src="https://github.com/AnKing-Memberships/spell-checker-addon/blob/master/screenshots/custom_dictionary.png?raw=true"> 
 
 
 ### Setup Instruction for Alternate Versions of Anki:
@@ -40,7 +43,7 @@ Alternate versions of Anki uses qt5.9 that requires a special folder called `qtw
 
 ## Screenshots:
 
-<img src="https://github.com/lovac42/SpellingPolice/blob/master/screenshots/cmenu.png?raw=true">  
+<img src="https://github.com/lovac42/SpellingPolice/blob/master/screenshots/editor.png?raw=true">  
 
-<img src="https://github.com/lovac42/SpellingPolice/blob/master/screenshots/during_review.png?raw=true">  
+<img src="https://github.com/lovac42/SpellingPolice/blob/master/screenshots/review.png?raw=true">  
 
