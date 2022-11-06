@@ -43,7 +43,7 @@ Alternate versions of Anki uses qt5.9 that requires a special folder called `qtw
 
 ## Screenshots:
 
-<img src="https://github.com/lovac42/SpellingPolice/blob/master/screenshots/editor.png?raw=true">  
+<img src="https://github.com/AnKing-Memberships/spell-checker-addon/blob/master/screenshots/editor.png?raw=true">  
 
-<img src="https://github.com/lovac42/SpellingPolice/blob/master/screenshots/review.png?raw=true">  
+<img src="https://github.com/AnKing-Memberships/spell-checker-addon/blob/master/screenshots/review.png?raw=true">  
 
