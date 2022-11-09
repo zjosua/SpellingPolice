@@ -77,6 +77,7 @@ def dic_bytes(words: List[str], output: bytearray) -> None:
 def create_bdic(words: List[str], aff: Optional[str] = None) -> bytes:
     """
     Create a new bdic file from list of words and aff string.
+    `words` must contain at least 2 words.
     Note that most aff commands are not supported.
     """
     possible_chars = set()

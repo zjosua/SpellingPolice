@@ -9,7 +9,7 @@ from typing import Optional
 
 from aqt import mw
 from aqt.qt import *
-from aqt.utils import openFolder, showInfo
+from aqt.utils import openFolder, showInfo, tooltip
 
 from .const import *
 from .bdicwriter import create_bdic
@@ -81,7 +81,7 @@ class DictionaryDialog(QDialog):
         bws_btn = QPushButton("Browse")
         bws_btn.clicked.connect(open_dict_dir)
         custom_words_btn = QPushButton("Custom Dictionary")
-        custom_words_btn.clicked.connect(lambda _: CustomDicDialog().exec())
+        custom_words_btn.clicked.connect(lambda _: CustomDicDialog(parent=self).exec())
         en_btn = QPushButton("Enable")
         en_btn.clicked.connect(self._enable)
         dis_btn = QPushButton("Disable")
@@ -150,9 +150,11 @@ class DictionaryDialog(QDialog):
 
 class CustomDicDialog(QDialog):
     saved = False
+    parent: QDialog
 
-    def __init__(self):
-        QDialog.__init__(self)
+    def __init__(self, parent: QDialog = mw):
+        QDialog.__init__(self, parent)
+        self.parent = parent
         Path(CUSTOM_WORDS_TEXT_FILE).touch(exist_ok=True)
         self._setup_dialog()
         self.load_words()
@@ -197,6 +199,23 @@ class CustomDicDialog(QDialog):
     def apply(self) -> None:
         words = self.text_edit.toPlainText().splitlines()
         words = list(sorted(set(words)))
+        # Delete dictionary if no words exist
+        if len(words) == 0:
+            Path(CUSTOM_DICT_FILE).unlink(missing_ok=True)
+            Path(CUSTOM_WORDS_TEXT_FILE).write_text("")
+            self.saved = True
+            self.close()
+            return
+        # Custom dictionary must have at least 2 words or an error occurs
+        if len(words) == 1:
+            additional = "a" if "a" not in words else "I"
+            words.append(additional)
+            tooltip(
+                f"Additionally added word '{additional}' because a dictionary must contain at least 2 words.",
+                period=6000,
+                parent=self.parent,
+            )
+
         aff: Optional[str] = None
         aff_file = Path(CUSTOM_WORDS_AFF_FILE)
         if aff_file.exists():
