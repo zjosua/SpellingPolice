@@ -196,7 +196,7 @@ class CustomDicDialog(QDialog):
 
     def apply(self) -> None:
         words = self.text_edit.toPlainText().splitlines()
-        words = list(sorted(words))
+        words = list(sorted(set(words)))
         aff: Optional[str] = None
         aff_file = Path(CUSTOM_WORDS_AFF_FILE)
         if aff_file.exists():
