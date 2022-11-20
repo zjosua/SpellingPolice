@@ -1,0 +1,16 @@
+{
+    "display_name": "Spelling Police",
+    "module_name": "spelling_police",
+    "repo_name": "SpellingPolice",
+    "ankiweb_id": "1410276506",
+    "author": "lovac42",
+    "contact": "https://github.com/lovac42",
+    "homepage": "https://github.com/lovac42/SpellingPolice",
+    "copyright_start": 2019,
+    "tags": "editor",
+    "conflicts": [],
+    "targets": [
+        "qt5",
+        "qt6"
+    ]
+}
