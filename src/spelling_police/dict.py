@@ -105,12 +105,6 @@ class DictionaryDialog(QDialog):
     def _browse(self):
         if os.path.exists(DICT_DIR):
             openFolder(DICT_DIR)
-        elif ALT_BUILD_VERSION:
-            from aqt import moduleDir
-            openFolder(moduleDir)
-
-        if ALT_BUILD_VERSION:
-            showInfo(ALT_BUILD_INSTRUCTIONS, title="Instructions", textFormat="rich")
 
     def _enable(self):
         sel = [i for i in range(self.list.count())
