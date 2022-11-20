@@ -45,7 +45,10 @@ def onContextMenuEvent(web, menu):
 
     if b and conf.get("duck_mode", False):
         firstAct=menu.actions()[0]
-        data=web._page.contextMenuData()
+        if qtmajor >= 6:
+            data = web.lastContextMenuRequest()
+        else:
+            data=web._page.contextMenuData()
         for sug_word in data.spellCheckerSuggestions():
             a=menu.addAction(sug_word)
             menu.insertAction(firstAct, a)
