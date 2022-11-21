@@ -13,6 +13,8 @@ The following dictionaries are installed by default:
 - `glutanimate_medical.bdic` is from: https://github.com/glutanimate/hunspell-en-med-glut-workaround
 - `en-US-10-1.bdic` is from the chromium browser.
 - `anki.bdic` contains words for Anki usage.
+- Download a drugs dictionary here: [drugs-2019.bdic.zip](https://github.com/AnKing-Memberships/spell-checker-addon/files/10060926/drugs-2019.bdic.zip)
+
 
 You can add more dictionaries by downloading the dictionary files. The add-on uses .bdic files used by Chrome.
 
