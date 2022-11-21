@@ -14,6 +14,7 @@ from aqt.utils import openFolder, showInfo, tooltip
 from .const import *
 from .bdicwriter import create_bdic
 from .anking_menu import get_anking_menu
+from .gui.get_dicts import invokeGetDicts
 
 
 def open_dict_dir() -> None:
@@ -85,9 +86,12 @@ class DictionaryDialog(QDialog):
         en_btn.clicked.connect(self._enable)
         dis_btn = QPushButton("Disable")
         dis_btn.clicked.connect(self._disable)
+        download_btn = QPushButton("Download")
+        download_btn.clicked.connect(self._download)
 
         control_box = QHBoxLayout()
         control_box.addWidget(bws_btn)
+        control_box.addWidget(download_btn)
         control_box.addWidget(custom_words_btn)
         control_box.addWidget(en_btn)
         control_box.addWidget(dis_btn)
@@ -95,6 +99,10 @@ class DictionaryDialog(QDialog):
         layout.addWidget(self.list)
         layout.addLayout(control_box)
         self.setLayout(layout)
+
+    def _download(self):
+        invokeGetDicts(parent=self)
+        self._update()
 
     def _update(self):
         self._dict = []
