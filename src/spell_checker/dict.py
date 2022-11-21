@@ -185,10 +185,13 @@ class CustomDicDialog(QDialog):
         apply_btn = QPushButton("Apply")
         apply_btn.clicked.connect(self.apply)
         apply_btn.setDefault(True)
+        cancel_btn = QPushButton("Cancel")
+        cancel_btn.clicked.connect(self.close)
 
         btn_box = QHBoxLayout()
         btn_box.addWidget(browse_btn)
         btn_box.addStretch(0)
+        btn_box.addWidget(cancel_btn)
         btn_box.addWidget(apply_btn)
 
         layout = QVBoxLayout()
