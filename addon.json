@@ -9,6 +9,6 @@
         "anki21"
     ],
     "min_anki_version": "2.1.5",
-    "max_tested_anki_version": "2.1.51",
+    "max_tested_anki_version": "2.1.55",
     "ankiweb_conflicts_with_local": false
 }
