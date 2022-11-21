@@ -93,6 +93,7 @@ class DictionaryDialog(QDialog):
         control_box.addWidget(bws_btn)
         control_box.addWidget(download_btn)
         control_box.addWidget(custom_words_btn)
+        control_box.addStretch(0)
         control_box.addWidget(en_btn)
         control_box.addWidget(dis_btn)
 
