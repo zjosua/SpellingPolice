@@ -107,7 +107,12 @@ class GetDicts(QDialog):
                 continue
             href = os.path.basename(href)
             filename = href.split(".bdic")[0]
-            dict_list.append(filename)
+            from .dict import verbose_name
+
+            if verbose_name(href):
+                dict_list.append(verbose_name(href) + " - " + filename)
+            else:
+                dict_list.append(filename)
             dict_list.sort()
         return dict_list
 
