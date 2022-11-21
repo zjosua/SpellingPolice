@@ -14,7 +14,7 @@ from aqt.utils import openFolder, showInfo, tooltip
 from .const import *
 from .bdicwriter import create_bdic
 from .anking_menu import get_anking_menu
-from .gui.get_dicts import invokeGetDicts
+from .get_dicts import invokeGetDicts
 
 
 def open_dict_dir() -> None:
