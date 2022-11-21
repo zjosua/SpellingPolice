@@ -51,7 +51,6 @@ class DictionaryManager:
 
         profile.setSpellCheckEnabled(profile.isSpellCheckEnabled())
         profile.setSpellCheckLanguages(self._dicts)
-        print(self._dicts)
 
     def getDictionaries(self):
         return self._dicts
