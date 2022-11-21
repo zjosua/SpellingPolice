@@ -181,22 +181,19 @@ class CustomDicDialog(QDialog):
         text_edit.setMaximumHeight(9999)
         self.text_edit = text_edit
 
-        apply_btn = QPushButton("Apply")
-        apply_btn.clicked.connect(self.apply)
-        apply_btn.setDefault(True)
-        cancel_btn = QPushButton("Cancel")
-        cancel_btn.clicked.connect(self.close)
-
-        btn_box = QHBoxLayout()
-        btn_box.addStretch(0)
-        btn_box.addWidget(cancel_btn)
-        btn_box.addWidget(apply_btn)
+        button_box = QDialogButtonBox(self)
+        button_box.setOrientation(Qt.Orientation.Horizontal)
+        button_box.setStandardButtons(
+            QDialogButtonBox.StandardButton.Cancel | QDialogButtonBox.StandardButton.Ok
+        )
+        button_box.accepted.connect(self.accept)
+        button_box.rejected.connect(self.reject)
 
         layout = QVBoxLayout()
         layout.addSpacing(3)
         layout.addWidget(instruction_text)
         layout.addWidget(text_edit)
-        layout.addLayout(btn_box)
+        layout.addWidget(button_box)
 
         self.setLayout(layout)
 
@@ -204,7 +201,7 @@ class CustomDicDialog(QDialog):
         text = Path(CUSTOM_WORDS_TEXT_FILE).read_text()
         self.text_edit.setPlainText(text)
 
-    def apply(self) -> None:
+    def accept(self) -> None:
         words = self.text_edit.toPlainText().splitlines()
         words = list(sorted(set(words)))
         # Delete dictionary if no words exist
@@ -237,9 +234,9 @@ class CustomDicDialog(QDialog):
         Path(CUSTOM_DICT_FILE).write_bytes(content)
         Path(CUSTOM_WORDS_TEXT_FILE).write_text("\n".join(words))
         self.saved = True
-        self.close()
+        QDialog.accept(self)
 
-    def closeEvent(self, event: QCloseEvent) -> None:
+    def reject(self) -> None:
         if not self.saved:
             resp = QMessageBox.question(
                 self,
@@ -249,6 +246,5 @@ class CustomDicDialog(QDialog):
                 QMessageBox.StandardButton.No,
             )
             if resp != QMessageBox.StandardButton.Yes:
-                event.ignore()
                 return
-        event.accept()
+        QDialog.reject(self)
