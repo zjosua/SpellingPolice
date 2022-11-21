@@ -1,9 +1,10 @@
+
 build/
 tools/
 profile/
 meta.json
 
-src/*/gui/forms/anki*
+src/*/gui/forms/
 src/*/gui/resources/anki*
 
 __pycache__/
