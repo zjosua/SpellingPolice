@@ -180,8 +180,6 @@ class CustomDicDialog(QDialog):
         text_edit.setMaximumHeight(9999)
         self.text_edit = text_edit
 
-        browse_btn = QPushButton("Browse")
-        browse_btn.clicked.connect(open_dict_dir)
         apply_btn = QPushButton("Apply")
         apply_btn.clicked.connect(self.apply)
         apply_btn.setDefault(True)
@@ -189,7 +187,6 @@ class CustomDicDialog(QDialog):
         cancel_btn.clicked.connect(self.close)
 
         btn_box = QHBoxLayout()
-        btn_box.addWidget(browse_btn)
         btn_box.addStretch(0)
         btn_box.addWidget(cancel_btn)
         btn_box.addWidget(apply_btn)
