@@ -55,12 +55,7 @@ class GetDicts(QDialog):
 
     def onAccept(self) -> None:
         for item in self.lwDicts.selectedItems():
-            label = item.text()
-            if re.search(r" - ", label):
-                filename = label.split(" - ")[1]
-            else:
-                filename = label.split(" - ")[0]
-            filename = filename + ".bdic"
+            filename = item.data(Qt.ItemDataRole.UserRole)
             dl_dest = os.path.join(DICT_DIR, filename)
             url = os.path.join(dicts_repo, filename) + "?format=TEXT"
             self.downloadDictionary(url, dl_dest)
@@ -83,12 +78,24 @@ class GetDicts(QDialog):
 
     def populateDictList(self) -> None:
         """Add available dicts to the list widget."""
+        from .dict import verbose_name
+
         self.lwDicts.clear()
-        for d in self.getDicts():
-            self.lwDicts.addItem(d)
+        items = []
+        for filename in self.getDicts():
+            filestem = filename[:-5]
+            item = QListWidgetItem(verbose_name(filestem))
+            item.setData(Qt.ItemDataRole.UserRole, filename)
+            items.append(item)
+        items.sort(key = lambda i: i.text())
+        for item in items:
+            self.lwDicts.addItem(item)
 
     def getDicts(self) -> List[str]:
-        """Get a list of dicts available in the chromium repo."""
+        """
+        Get a list of dicts available in the chromium repo.
+        Returns a list of filenames ending with .bdic
+        """
         dict_list: List[str] = []
         try:
             with urllib.request.urlopen(dicts_repo) as fp:
@@ -108,14 +115,7 @@ class GetDicts(QDialog):
             if not href.endswith(".bdic"):
                 continue
             href = os.path.basename(href)
-            filename = href.split(".bdic")[0]
-            from .dict import verbose_name
-
-            if verbose_name(href):
-                dict_list.append(verbose_name(href) + " - " + filename)
-            else:
-                dict_list.append(filename)
-            dict_list.sort()
+            dict_list.append(href)
         return dict_list
 
 

@@ -29,18 +29,20 @@ def open_dict_dir() -> None:
     if ALT_BUILD_VERSION:
         showInfo(ALT_BUILD_INSTRUCTIONS, title="Instructions", textFormat="rich")
 
-def verbose_name(filename: str) -> Union[str, None]:
-    """Get verbose filename from dictionary filename"""
-    langcode_re = re.compile(r"([a-z]{2}-[A-Z]{2}|[a-z]{2}).*\.bdic")
+def verbose_name(filename: str) -> str:
+    """Get verbose dictionary name from filename"""
+    langcode_re = re.compile(r"^([a-z]{2}-[A-Z]{2}|[a-z]{2})-")
     matches = langcode_re.findall(filename)
     if not matches:
-        return None
+        return filename
     vn = langs.get(matches[0], None)
-    if not vn:
+    if vn is None:
         # try ISO 639-1 language code without ISO 3166-1 country code
         iso639 = matches[0].split("-")[0]
         vn = langs.get(iso639, None)
-    return vn
+    if vn is None:
+        return filename
+    return vn  + " - " + filename
 
 
 class DictionaryManager:
@@ -131,17 +133,14 @@ class DictionaryDialog(QDialog):
 
         for d in DICT_FILES:
             if RE_DICT_EXT_ENABLED.search(d):
-                if verbose_name(d):
-                    item = QListWidgetItem(verbose_name(d) + " - " + d)
-                else:
-                    item = QListWidgetItem(d)
+                item = QListWidgetItem(verbose_name(d))
                 item.setData(Qt.ItemDataRole.UserRole, d)
                 self.list.addItem(item)
                 self._dict.append(d[:-5])
 
         for d in DICT_FILES:
             if RE_DICT_EXT_DISABLED.search(d):
-                item = QListWidgetItem(d)
+                item = QListWidgetItem(verbose_name(d))
                 item.setData(Qt.ItemDataRole.UserRole, d)
                 self.list.addItem(item)
 
@@ -149,7 +148,7 @@ class DictionaryDialog(QDialog):
         sel = [i for i in range(self.list.count()) if self.list.item(i).isSelected()]
         if sel:
             for i in sel:
-                fn = self.list.item(i).text()
+                fn = self.list.item(i).data(Qt.ItemDataRole.UserRole)
                 if RE_DICT_EXT_DISABLED.search(fn):
                     f = os.path.join(DICT_DIR, fn)
                     os.rename(f, f[:-9])
@@ -159,7 +158,7 @@ class DictionaryDialog(QDialog):
         sel = [i for i in range(self.list.count()) if self.list.item(i).isSelected()]
         if sel:
             for i in sel:
-                fn = self.list.item(i).text()
+                fn = self.list.item(i).data(Qt.ItemDataRole.UserRole)
                 if RE_DICT_EXT_ENABLED.search(fn):
                     f = os.path.join(DICT_DIR, fn)
                     os.rename(f, f + ".disabled")
