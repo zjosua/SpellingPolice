@@ -5,7 +5,8 @@
 
 
 import os
-from typing import Optional
+import re
+from typing import Optional, Union
 
 from aqt import mw
 from aqt.qt import *
@@ -27,6 +28,19 @@ def open_dict_dir() -> None:
 
     if ALT_BUILD_VERSION:
         showInfo(ALT_BUILD_INSTRUCTIONS, title="Instructions", textFormat="rich")
+
+def verbose_name(filename: str) -> Union[str, None]:
+    """Get verbose filename from dictionary filename"""
+    langcode_re = re.compile(r"([a-z]{2}-[A-Z]{2}|[a-z]{2}).*\.bdic")
+    matches = langcode_re.findall(filename)
+    if not matches:
+        return None
+    vn = langs.get(matches[0], None)
+    if not vn:
+        # try ISO 639-1 language code without ISO 3166-1 country code
+        iso639 = matches[0].split("-")[0]
+        vn = langs.get(iso639, None)
+    return vn
 
 
 class DictionaryManager:
@@ -117,7 +131,10 @@ class DictionaryDialog(QDialog):
 
         for d in DICT_FILES:
             if RE_DICT_EXT_ENABLED.search(d):
-                item = QListWidgetItem(d)
+                if verbose_name(d):
+                    item = QListWidgetItem(verbose_name(d) + " - " + d)
+                else:
+                    item = QListWidgetItem(d)
                 item.setData(Qt.ItemDataRole.UserRole, d)
                 self.list.addItem(item)
                 self._dict.append(d[:-5])
