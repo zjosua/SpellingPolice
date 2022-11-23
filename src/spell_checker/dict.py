@@ -160,7 +160,7 @@ class CustomDicDialog(QDialog):
     saved = False
     parent: QDialog
 
-    def __init__(self, parent: QDialog = mw):
+    def __init__(self, parent: QDialog):
         QDialog.__init__(self, parent)
         self.parent = parent
         Path(CUSTOM_WORDS_TEXT_FILE).touch(exist_ok=True)

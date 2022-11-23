@@ -4,6 +4,7 @@ import base64
 import os
 import re
 import urllib.request
+from typing import List, Dict
 
 from bs4 import BeautifulSoup
 from typing import Any, Optional
@@ -23,7 +24,7 @@ dicts_repo = (
 class GetDicts(QDialog):
     """Get dictionaries dialog"""
 
-    def __init__(self, parent: Optional[QDialog] = mw) -> None:
+    def __init__(self, parent: Optional[QWidget] = mw) -> None:
         super(GetDicts, self).__init__(parent)
         self.setupUI()
 
@@ -48,7 +49,7 @@ class GetDicts(QDialog):
         self.buttonBox.rejected.connect(self.onReject)
         self.populateDictList()
 
-    def setupValues(self, values: dict[str, Any]) -> None:
+    def setupValues(self, values: Dict[str, Any]) -> None:
         """Set widget values"""
         pass
 
@@ -86,9 +87,9 @@ class GetDicts(QDialog):
         for d in self.getDicts():
             self.lwDicts.addItem(d)
 
-    def getDicts(self) -> list[str]:
+    def getDicts(self) -> List[str]:
         """Get a list of dicts available in the chromium repo."""
-        dict_list: list[str] = []
+        dict_list: List[str] = []
         try:
             with urllib.request.urlopen(dicts_repo) as fp:
                 mybytes = fp.read()
@@ -113,7 +114,7 @@ class GetDicts(QDialog):
         return dict_list
 
 
-def invokeGetDicts(parent: Optional[QDialog] = mw) -> None:
+def invokeGetDicts(parent: Optional[QWidget] = mw) -> None:
     """Invoke options dialog"""
     dialog = GetDicts(parent)
-    return dialog.exec()
+    dialog.exec()
