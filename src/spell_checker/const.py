@@ -7,6 +7,7 @@
 import os
 import re
 from pathlib import Path
+from typing import Dict
 
 from aqt import mw
 from aqt.qt import qtmajor, qtminor
@@ -55,7 +56,7 @@ You are using an alternate build of Anki that uses an older toolkit. Spell check
 """
 
 # https://wiki.freepascal.org/Language_Codes
-langs: dict[str, str] = {
+langs: Dict[str, str] = {
     "af": "Afrikaans",
     "am": "Amharic",
     "ar-AE": "Arabic (United Arab Emirates)",
