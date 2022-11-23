@@ -6,6 +6,7 @@ import re
 import urllib.request
 
 from bs4 import BeautifulSoup
+from typing import Any, Optional
 
 from aqt import mw
 from aqt.qt import *
@@ -22,11 +23,11 @@ dicts_repo = (
 class GetDicts(QDialog):
     """Get dictionaries dialog"""
 
-    def __init__(self, parent: QDialog = mw):
+    def __init__(self, parent: Optional[QDialog] = mw) -> None:
         super(GetDicts, self).__init__(parent)
         self.setupUI()
 
-    def setupUI(self):
+    def setupUI(self) -> None:
         self.setObjectName("Dialog")
         self.resize(400, 300)
         self.setWindowTitle("Select dictionary")
@@ -47,11 +48,11 @@ class GetDicts(QDialog):
         self.buttonBox.rejected.connect(self.onReject)
         self.populateDictList()
 
-    def setupValues(self, values):
+    def setupValues(self, values: dict[str, Any]) -> None:
         """Set widget values"""
         pass
 
-    def onAccept(self):
+    def onAccept(self) -> None:
         for item in self.lwDicts.selectedItems():
             label = item.text()
             if re.search(r" - ", label):
@@ -65,7 +66,7 @@ class GetDicts(QDialog):
             tooltip(f"Downloaded dictionary {filename}")
         self.close()
 
-    def downloadDictionary(self, url, dest):
+    def downloadDictionary(self, url: str, dest: str) -> None:
         """
         Download a decoded dictionary file.
 
@@ -79,15 +80,15 @@ class GetDicts(QDialog):
     def onReject(self):
         self.close()
 
-    def populateDictList(self):
+    def populateDictList(self) -> None:
         """Add available dicts to the list widget."""
         self.lwDicts.clear()
         for d in self.getDicts():
             self.lwDicts.addItem(d)
 
-    def getDicts(self):
+    def getDicts(self) -> list[str]:
         """Get a list of dicts available in the chromium repo."""
-        dict_list = []
+        dict_list: list[str] = []
         try:
             with urllib.request.urlopen(dicts_repo) as fp:
                 mybytes = fp.read()
@@ -112,7 +113,7 @@ class GetDicts(QDialog):
         return dict_list
 
 
-def invokeGetDicts(parent: QDialog = mw):
+def invokeGetDicts(parent: Optional[QDialog] = mw) -> None:
     """Invoke options dialog"""
     dialog = GetDicts(parent)
     return dialog.exec()
