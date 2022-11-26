@@ -1,14 +1,14 @@
 {
     "display_name": "Spell Checker with Custom Dictionaries",
-    "module_name": "spell_checker",
+    "module_name": "390813456",
     "repo_name": "spell-checker-addon",
-    "ankiweb_id": "1410276506",
+    "ankiweb_id": "390813456",
     "author": "",
     "conflicts": [],
     "targets": [
         "anki21"
     ],
-    "min_anki_version": "2.1.5",
+    "min_anki_version": "2.1.36",
     "max_tested_anki_version": "2.1.55",
     "ankiweb_conflicts_with_local": false
 }
