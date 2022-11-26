@@ -7,6 +7,8 @@ If you read "The Shallows", it describes the over reliance of spell checkers in 
 
 This addon follows that idea and is off by default, but when turned on, spelling police nags you and points out all your spelling errors. It does not fix spelling mistakes for you. That's your job. This tough love approach will help you to learn to spell better.
 
+Ankiweb Listing: https://ankiweb.net/shared/info/390813456
+
 ## Dictionaries:
 
 The following dictionaries are installed by default:
